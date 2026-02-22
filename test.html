@@ -3,258 +3,235 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PID Odjezdy — Pražská integrovaná doprava</title>
+<title>PID Odjezdy — Jakub Růžička</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&display=swap" rel="stylesheet">
 <style>
-/* ══════════════════════════════════════
-   THEMES
-══════════════════════════════════════ */
-:root {
-  --bg:#0a0c10; --bg2:#111318; --bg3:#1a1d24; --border:#252932;
-  --text:#e8eaf0; --text2:#8a8f9e; --text3:#545966;
-  --accent:#f5c842; --accent2:#ff6b35; --accent3:#4ea8ff;
-  --green:#44d986; --red:#ff4f4f; --orange:#ff9f40;
-  --ma:#00a562; --mb:#f5c842; --mc:#c8102e;
-  --R:10px; --M:'Space Mono',monospace; --S:'DM Sans',sans-serif; --T:.18s ease;
+/* ═══ THEMES ═══ */
+:root{
+  --bg:#0a0c10;--bg2:#111318;--bg3:#1a1d24;--bd:#252932;
+  --tx:#e8eaf0;--tx2:#8a8f9e;--tx3:#545966;
+  --ac:#f5c842;--ac2:#ff6b35;--ac3:#4ea8ff;
+  --g:#44d986;--r:#ff4f4f;--o:#ff9f40;
+  --ma:#00a562;--mb:#f5c842;--mc:#c8102e;
+  --R:10px;--M:'Space Mono',monospace;--S:'DM Sans',sans-serif;--T:.18s ease;
 }
-[data-theme="light"]{--bg:#f0ede6;--bg2:#fff;--bg3:#e8e4db;--border:#d5cfc4;--text:#1a1a1a;--text2:#5a5a6a;--text3:#9a9aaa;--accent:#c89a00;--accent2:#d44010;--accent3:#0055cc;}
-[data-theme="tram"]{--bg:#0c1a0e;--bg2:#112014;--bg3:#162b1a;--border:#1d3422;--text:#d0f5d8;--text2:#60b070;--text3:#386440;--accent:#44d986;--accent2:#90ff60;--accent3:#60ffd0;}
-[data-theme="metro"]{--bg:#04060f;--bg2:#070b1c;--bg3:#0c1230;--border:#13193e;--text:#bcd4ff;--text2:#5870a4;--text3:#303c60;--accent:#4ea8ff;--accent2:#9060ff;--accent3:#ff50a0;}
-[data-theme="terminal"]{--bg:#000;--bg2:#040404;--bg3:#080808;--border:#141414;--text:#00ff41;--text2:#007718;--text3:#003c0c;--accent:#00ff41;--accent2:#00cc33;--accent3:#009926;}
+[data-theme="light"]{--bg:#f0ede6;--bg2:#fff;--bg3:#e8e4db;--bd:#d5cfc4;--tx:#1a1a1a;--tx2:#5a5a6a;--tx3:#9a9aaa;--ac:#c89a00;--ac2:#d44010;--ac3:#0055cc;}
+[data-theme="tram"]{--bg:#0c1a0e;--bg2:#112014;--bg3:#162b1a;--bd:#1d3422;--tx:#d0f5d8;--tx2:#60b070;--tx3:#386440;--ac:#44d986;--ac2:#90ff60;--ac3:#60ffd0;}
+[data-theme="metro"]{--bg:#04060f;--bg2:#070b1c;--bg3:#0c1230;--bd:#13193e;--tx:#bcd4ff;--tx2:#5870a4;--tx3:#303c60;--ac:#4ea8ff;--ac2:#9060ff;--ac3:#ff50a0;}
+[data-theme="terminal"]{--bg:#000;--bg2:#040404;--bg3:#080808;--bd:#141414;--tx:#00ff41;--tx2:#007718;--tx3:#003c0c;--ac:#00ff41;--ac2:#00cc33;--ac3:#009926;}
 
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:var(--S);min-height:100vh;transition:background var(--T),color var(--T);}
+body{background:var(--bg);color:var(--tx);font-family:var(--S);min-height:100vh;transition:background var(--T),color var(--T);}
 
-/* ══════════════════════════════════════
-   LAYOUT
-══════════════════════════════════════ */
-.layout{display:grid;grid-template-columns:268px 1fr;grid-template-rows:58px 1fr;min-height:100vh;}
+/* ═══ LAYOUT ═══ */
+.layout{display:grid;grid-template-columns:265px 1fr;grid-template-rows:56px 1fr;min-height:100vh;}
 
-/* ── HEADER ── */
-header{
-  grid-column:1/-1;
-  background:var(--bg2);border-bottom:1px solid var(--border);
-  padding:0 18px;display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:200;
-}
+/* HEADER */
+header{grid-column:1/-1;background:var(--bg2);border-bottom:1px solid var(--bd);padding:0 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
 .logo{display:flex;align-items:center;gap:10px;}
-.logo-badge{width:32px;height:32px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font:700 12px/1 var(--M);color:#000;flex-shrink:0;}
-.logo-name{font:700 13px/1 var(--M);}
-.logo-sub{font:400 9px/1 var(--M);color:var(--text3);letter-spacing:.07em;text-transform:uppercase;margin-top:3px;}
-.hdr-r{display:flex;align-items:center;gap:9px;}
-.live{display:flex;align-items:center;gap:5px;background:rgba(68,217,134,.1);border:1px solid rgba(68,217,134,.22);border-radius:20px;padding:3px 9px;font:400 10px/1 var(--M);color:var(--green);}
-.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.4s ease infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-#clock{font:400 13px/1 var(--M);color:var(--text2);}
-.themes{display:flex;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:3px;}
+.logo-ic{width:32px;height:32px;background:var(--ac);border-radius:7px;display:flex;align-items:center;justify-content:center;font:700 12px/1 var(--M);color:#000;flex-shrink:0;}
+.logo-nm{font:700 13px/1 var(--M);}
+.logo-sb{font:400 9px/1 var(--M);color:var(--tx3);letter-spacing:.07em;text-transform:uppercase;margin-top:3px;}
+.hr{display:flex;align-items:center;gap:9px;}
+.live{display:flex;align-items:center;gap:5px;background:rgba(68,217,134,.1);border:1px solid rgba(68,217,134,.22);border-radius:20px;padding:3px 9px;font:400 10px/1 var(--M);color:var(--g);}
+.ld{width:5px;height:5px;border-radius:50%;background:var(--g);animation:bl 1.4s ease infinite;}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+#clock{font:400 13px/1 var(--M);color:var(--tx2);}
+.tpick{display:flex;gap:3px;background:var(--bg3);border:1px solid var(--bd);border-radius:7px;padding:3px;}
 .tb{width:19px;height:19px;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:transform .13s,border-color .13s;position:relative;}
 .tb:hover{transform:scale(1.3);}
-.tb.on{border-color:var(--accent);}
+.tb.on{border-color:var(--ac);}
 .tb[data-t="dark"]{background:#111318;}
 .tb[data-t="light"]{background:#f0ede6;}
 .tb[data-t="tram"]{background:#112014;}
 .tb[data-t="metro"]{background:#070b1c;}
 .tb[data-t="terminal"]{background:#000;}
-.tbt{position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font:400 9px/1 var(--M);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;}
+.tbt{position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--bd);border-radius:4px;padding:2px 6px;font:400 9px/1 var(--M);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;}
 .tb:hover .tbt{opacity:1;}
 
-/* ── SIDEBAR ── */
-.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:6px;}
-.s-sec{padding:0 13px;margin-bottom:4px;}
-.s-lbl{font:400 9px/1 var(--M);letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:6px;display:block;}
-.nav-btn{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:none;background:transparent;color:var(--text2);cursor:pointer;font:500 13px/1 var(--S);transition:background var(--T),color var(--T);text-align:left;margin-bottom:1px;}
-.nav-btn:hover{background:var(--bg3);color:var(--text);}
-.nav-btn.active{background:rgba(245,200,66,.1);color:var(--accent);}
+/* SIDEBAR */
+.sidebar{background:var(--bg2);border-right:1px solid var(--bd);overflow-y:auto;padding:16px 0;}
+.ss{padding:0 13px;margin-bottom:18px;}
+.sl{font:400 9px/1 var(--M);letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);padding:0 8px;margin-bottom:6px;display:block;}
+.nb{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:none;background:transparent;color:var(--tx2);cursor:pointer;font:500 13px/1 var(--S);transition:background var(--T),color var(--T);text-align:left;margin-bottom:2px;}
+.nb:hover{background:var(--bg3);color:var(--tx);}
+.nb.on{background:rgba(245,200,66,.1);color:var(--ac);}
 .ni{font-size:14px;width:17px;text-align:center;}
+.ai{width:100%;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:6px 8px;color:var(--tx);font:400 10px/1 var(--M);outline:none;transition:border-color var(--T);}
+.ai:focus{border-color:var(--ac);}
+.ai::placeholder{color:var(--tx3);}
+.ab{width:100%;margin-top:4px;padding:6px;background:var(--ac);color:#000;border:none;border-radius:6px;font:700 10px/1 var(--M);cursor:pointer;transition:opacity var(--T);}
+.ab:hover{opacity:.8;}
+.ast{font:400 9px/1 var(--M);margin-top:4px;padding:0 2px;}
+.ast.ok{color:var(--g);}
+.ast.err{color:var(--r);}
+.svi{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;cursor:pointer;transition:background var(--T);margin-bottom:2px;}
+.svi:hover{background:var(--bg3);}
+.svi.cur{background:rgba(245,200,66,.08);}
+.sn{font:500 12px/1.2 var(--S);}
+.sid{font:400 9px/1 var(--M);color:var(--tx3);margin-top:2px;}
+.srm{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:12px;border-radius:3px;transition:color var(--T);padding:2px 3px;}
+.srm:hover{color:var(--r);}
+.sem{padding:5px 10px;font:italic 11px/1 var(--S);color:var(--tx3);}
 
-/* API KEY AREA */
-.api-area{padding:0 13px;margin-bottom:4px;}
-.api-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font:400 10px/1 var(--M);outline:none;transition:border-color var(--T);}
-.api-input:focus{border-color:var(--accent);}
-.api-input::placeholder{color:var(--text3);}
-.api-btn{width:100%;margin-top:4px;padding:6px;background:var(--accent);color:#000;border:none;border-radius:6px;font:700 10px/1 var(--M);cursor:pointer;letter-spacing:.04em;transition:opacity var(--T);}
-.api-btn:hover{opacity:.8;}
-.api-st{font:400 9px/1 var(--M);margin-top:4px;padding:0 2px;}
-.api-st.ok{color:var(--green);}
-.api-st.err{color:var(--red);}
-
-/* SAVED STOPS */
-.saved-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;cursor:pointer;transition:background var(--T);margin-bottom:1px;}
-.saved-item:hover{background:var(--bg3);}
-.saved-item.cur{background:rgba(245,200,66,.08);}
-.si-name{font:500 12px/1.2 var(--S);color:var(--text);}
-.si-id{font:400 9px/1 var(--M);color:var(--text3);margin-top:2px;}
-.si-rm{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:2px 3px;border-radius:3px;transition:color var(--T);}
-.si-rm:hover{color:var(--red);}
-.s-empty{padding:5px 10px;font:italic 11px/1 var(--S);color:var(--text3);}
-
-/* ── MAIN ── */
+/* MAIN */
 .main{overflow-y:auto;padding:20px;background:var(--bg);}
-.page{display:none;animation:fadeIn .2s ease;}
-.page.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.page{display:none;}
+.page.on{display:block;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-/* SEARCH BAR */
+/* SEARCH */
 .sbar{display:flex;gap:8px;margin-bottom:7px;}
-.sinput{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:10px 14px;color:var(--text);font:400 14px/1 var(--S);outline:none;transition:border-color var(--T);}
-.sinput:focus{border-color:var(--accent);}
-.sinput::placeholder{color:var(--text3);}
-.sbtn{padding:10px 16px;background:var(--accent);color:#000;border:none;border-radius:var(--R);font:700 12px/1 var(--M);cursor:pointer;transition:opacity var(--T),transform .1s;white-space:nowrap;letter-spacing:.03em;}
+.sinp{flex:1;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--R);padding:10px 14px;color:var(--tx);font:400 14px/1 var(--S);outline:none;transition:border-color var(--T);}
+.sinp:focus{border-color:var(--ac);}
+.sinp::placeholder{color:var(--tx3);}
+.sbtn{padding:10px 16px;background:var(--ac);color:#000;border:none;border-radius:var(--R);font:700 12px/1 var(--M);cursor:pointer;transition:opacity var(--T),transform .1s;white-space:nowrap;}
 .sbtn:hover{opacity:.82;}
 .sbtn:active{transform:scale(.96);}
-
-/* SEARCH RESULTS DROPDOWN */
-.sresults{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);overflow:hidden;margin-bottom:13px;display:none;max-height:260px;overflow-y:auto;}
-.sri{padding:9px 14px;cursor:pointer;transition:background var(--T);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.sdrop{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--R);overflow:hidden;margin-bottom:13px;display:none;max-height:260px;overflow-y:auto;z-index:50;position:relative;}
+.sri{padding:9px 14px;cursor:pointer;transition:background var(--T);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);}
 .sri:last-child{border-bottom:none;}
 .sri:hover{background:var(--bg3);}
-.sri-name{font:500 13px/1 var(--S);}
-.sri-meta{font:400 10px/1 var(--M);color:var(--text3);margin-top:3px;}
-
-/* ERROR BOX */
-.errbox{background:rgba(255,79,79,.1);border:1px solid rgba(255,79,79,.28);border-radius:8px;padding:10px 13px;font:400 12px/1.4 var(--S);color:var(--red);margin-bottom:13px;display:none;}
+.srn{font:500 13px/1 var(--S);}
+.srm2{font:400 10px/1 var(--M);color:var(--tx3);margin-top:3px;}
+.errbox{background:rgba(255,79,79,.1);border:1px solid rgba(255,79,79,.28);border-radius:8px;padding:10px 13px;font:400 12px/1.4 var(--S);color:var(--r);margin-bottom:13px;display:none;}
 
 /* BOARD */
-.board-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:13px;}
-.board-title{font:700 19px/1.2 var(--M);letter-spacing:-.02em;}
-.board-sub{font:400 10px/1 var(--M);color:var(--text3);margin-top:4px;}
-.board-acts{display:flex;gap:6px;}
-.ic-btn{width:32px;height:32px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text2);transition:all var(--T);}
-.ic-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--accent);}
+.bh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:13px;}
+.bt{font:700 19px/1.2 var(--M);letter-spacing:-.02em;}
+.bs{font:400 10px/1 var(--M);color:var(--tx3);margin-top:4px;}
+.ba{display:flex;gap:6px;}
+.icb{width:32px;height:32px;background:var(--bg2);border:1px solid var(--bd);border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--tx2);transition:all var(--T);}
+.icb:hover{background:var(--bg3);color:var(--tx);border-color:var(--ac);}
 
 /* REFRESH BAR */
-.rbar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:8px 12px;margin-bottom:13px;display:flex;align-items:center;gap:10px;}
-.rl{font:400 10px/1 var(--M);color:var(--text2);white-space:nowrap;}
-.rprog{flex:1;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
-.rfill{height:100%;background:var(--accent);border-radius:1px;transition:width 1s linear;}
+.rb2{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--R);padding:8px 12px;margin-bottom:13px;display:flex;align-items:center;gap:10px;}
+.rl{font:400 10px/1 var(--M);color:var(--tx2);white-space:nowrap;}
+.rp{flex:1;height:2px;background:var(--bd);border-radius:1px;overflow:hidden;}
+.rf{height:100%;background:var(--ac);border-radius:1px;transition:width 1s linear;}
 
 /* FILTER TABS */
 .ftabs{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap;}
-.ftab{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font:400 10px/1 var(--M);cursor:pointer;transition:all var(--T);}
-.ftab:hover{border-color:var(--accent);color:var(--text);}
-.ftab.on{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+.ft{padding:4px 11px;border-radius:20px;border:1px solid var(--bd);background:var(--bg2);color:var(--tx2);font:400 10px/1 var(--M);cursor:pointer;transition:all var(--T);}
+.ft:hover{border-color:var(--ac);color:var(--tx);}
+.ft.on{background:var(--ac);color:#000;border-color:var(--ac);font-weight:700;}
 
-/* DEPARTURE TABLE */
-.dtable{width:100%;border-collapse:collapse;font-size:13px;}
-.dtable thead tr{border-bottom:1px solid var(--border);}
-.dtable th{text-align:left;padding:6px 10px;font:400 9px/1 var(--M);letter-spacing:.1em;text-transform:uppercase;color:var(--text3);}
-.drow{border-bottom:1px solid var(--border);transition:background var(--T);animation:rowIn .28s ease forwards;opacity:0;}
-.drow:hover{background:var(--bg2);}
-@keyframes rowIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.drow td{padding:9px 10px;vertical-align:middle;}
+/* DEP TABLE */
+.dt{width:100%;border-collapse:collapse;font-size:13px;}
+.dt thead tr{border-bottom:1px solid var(--bd);}
+.dt th{text-align:left;padding:6px 10px;font:400 9px/1 var(--M);letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);}
+.dr{border-bottom:1px solid var(--bd);transition:background var(--T);animation:ri .28s ease forwards;opacity:0;}
+.dr:hover{background:var(--bg2);}
+@keyframes ri{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.dr td{padding:9px 10px;vertical-align:middle;}
 
 /* ROUTE BADGE */
-.rb{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:3px 6px;border-radius:5px;font:700 11px/1 var(--M);}
-.rb-bus{background:rgba(78,168,255,.14);color:var(--accent3);}
-.rb-tram{background:rgba(255,107,53,.14);color:var(--accent2);}
+.rbl{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:3px 6px;border-radius:5px;font:700 11px/1 var(--M);}
+.rb-bus{background:rgba(78,168,255,.14);color:var(--ac3);}
+.rb-tram{background:rgba(255,107,53,.14);color:var(--ac2);}
 .rb-ma{background:rgba(0,165,98,.18);color:var(--ma);}
 .rb-mb{background:rgba(245,200,66,.18);color:var(--mb);}
 .rb-mc{background:rgba(200,16,46,.18);color:var(--mc);}
-.rb-night{background:rgba(138,143,158,.14);color:var(--text2);}
+.rb-night{background:rgba(138,143,158,.14);color:var(--tx2);}
 .rb-train{background:rgba(180,100,255,.14);color:#b464ff;}
 .rb-ferry{background:rgba(0,200,255,.14);color:#00c8ff;}
 
 /* MINUTES PILL */
-.mins{display:inline-block;font:700 11px/1 var(--M);padding:2px 6px;border-radius:4px;}
-.mins.now{background:var(--accent);color:#000;animation:fla 1s ease infinite;}
-.mins.soon{background:rgba(255,79,79,.14);color:var(--red);}
-.mins.near{background:rgba(255,159,64,.14);color:var(--orange);}
-.mins.ok{background:rgba(68,217,134,.11);color:var(--green);}
+.mn{display:inline-block;font:700 11px/1 var(--M);padding:2px 6px;border-radius:4px;}
+.mn.now{background:var(--ac);color:#000;animation:fla 1s ease infinite;}
+.mn.soon{background:rgba(255,79,79,.14);color:var(--r);}
+.mn.near{background:rgba(255,159,64,.14);color:var(--o);}
+.mn.ok{background:rgba(68,217,134,.11);color:var(--g);}
 @keyframes fla{0%,100%{opacity:1}50%{opacity:.5}}
-
-/* DELAY */
 .dl{font:400 10px/1 var(--M);}
-.dl.late{color:var(--red);}
-.dl.early{color:var(--accent3);}
-.dl.ok{color:var(--green);}
+.dl.late{color:var(--r);}
+.dl.early{color:var(--ac3);}
+.dl.ok{color:var(--g);}
 
 /* STATE BOX */
-.sbox{padding:52px 20px;text-align:center;color:var(--text3);}
-.sbox-icon{font-size:42px;margin-bottom:13px;opacity:.45;}
-.sbox-title{font:700 16px/1 var(--M);color:var(--text2);margin-bottom:7px;}
-.sbox-desc{font:400 12px/1.6 var(--S);max-width:360px;margin:0 auto;}
-.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 13px;}
-@keyframes spin{to{transform:rotate(360deg)}}
+.stb{padding:52px 20px;text-align:center;color:var(--tx3);}
+.sti{font-size:42px;margin-bottom:13px;opacity:.45;}
+.stt{font:700 16px/1 var(--M);color:var(--tx2);margin-bottom:7px;}
+.std{font:400 12px/1.6 var(--S);max-width:380px;margin:0 auto;}
+.spin{width:28px;height:28px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:sp .75s linear infinite;margin:0 auto 13px;}
+@keyframes sp{to{transform:rotate(360deg)}}
 
 /* VEHICLES */
-.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:16px;}
-.vc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:14px;transition:border-color var(--T),transform .14s;animation:rowIn .28s ease forwards;opacity:0;}
-.vc:hover{border-color:var(--accent);transform:translateY(-2px);}
-.vc-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
-.vc-hs{font:700 13px/1.2 var(--S);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
-.vc-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s ease infinite;margin-top:5px;}
+.vg{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px;margin-top:16px;}
+.vc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--R);padding:14px;transition:border-color var(--T),transform .14s;animation:ri .28s ease forwards;opacity:0;}
+.vc:hover{border-color:var(--ac);transform:translateY(-2px);}
+.vch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.vhs{font:700 13px/1.2 var(--S);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:148px;}
+.vdt{width:6px;height:6px;border-radius:50%;background:var(--g);animation:bl 1.4s ease infinite;margin-top:5px;}
 .vm{display:grid;grid-template-columns:1fr 1fr;gap:6px;font:400 9px/1 var(--M);}
 .vmi{background:var(--bg3);border-radius:5px;padding:5px 6px;}
-.vml{color:var(--text3);margin-bottom:2px;}
-.vmv{color:var(--text);font-weight:700;}
-.vmv.late{color:var(--red);}
-.vmv.ok{color:var(--green);}
-.vmv.early{color:var(--accent3);}
+.vml{color:var(--tx3);margin-bottom:2px;}
+.vmv{color:var(--tx);font-weight:700;}
+.vmv.late{color:var(--r);}
+.vmv.ok2{color:var(--g);}
+.vmv.early{color:var(--ac3);}
 
 /* ABOUT / SETTINGS */
 .pg-title{font:700 18px/1 var(--M);margin-bottom:4px;letter-spacing:-.02em;}
-.pg-sub{font:400 12px/1 var(--S);color:var(--text3);margin-bottom:20px;}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:20px;margin-bottom:14px;}
-.card-title{font:400 10px/1 var(--M);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
-.card-title::after{content:'';flex:1;height:1px;background:var(--border);}
-
-.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.feat{display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--bg3);border-radius:6px;}
-.feat-ico{font-size:16px;margin-top:1px;}
-.feat-t h4{font:700 11px/1 var(--S);margin-bottom:2px;}
-.feat-t p{font:400 10px/1.35 var(--S);color:var(--text2);}
-
-.cl-row{display:flex;gap:13px;padding:11px 0;border-bottom:1px solid var(--border);}
-.cl-row:last-child{border-bottom:none;}
-.cl-v{font:700 10px/1 var(--M);color:var(--accent);white-space:nowrap;min-width:40px;}
-.cl-d{font:400 9px/1 var(--M);color:var(--text3);margin-top:2px;}
-.cl-e h4{font:700 11px/1 var(--S);margin-bottom:3px;}
-.cl-e ul{padding-left:13px;}
-.cl-e li{font:400 10px/1.5 var(--S);color:var(--text2);margin-bottom:1px;}
-.tag{display:inline-block;padding:1px 5px;border-radius:3px;font:700 8px/1 var(--M);margin-right:3px;letter-spacing:.04em;}
-.tg-new{background:rgba(68,217,134,.14);color:var(--green);}
-.tg-fix{background:rgba(255,79,79,.14);color:var(--red);}
-.tg-imp{background:rgba(78,168,255,.14);color:var(--accent3);}
-
-.set-row{display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg3);border-radius:6px;margin-bottom:7px;flex-wrap:wrap;gap:7px;}
-.set-row:last-child{margin-bottom:0;}
-.sl h4{font:500 12px/1 var(--S);}
-.sl p{font:400 9px/1 var(--S);color:var(--text3);margin-top:2px;}
-.tog{width:36px;height:18px;background:var(--border);border-radius:9px;position:relative;cursor:pointer;transition:background var(--T);flex-shrink:0;}
-.tog.on{background:var(--accent);}
+.pg-sub{font:400 12px/1 var(--S);color:var(--tx3);margin-bottom:20px;}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--R);padding:20px;margin-bottom:14px;}
+.ct{font:400 10px/1 var(--M);letter-spacing:.08em;text-transform:uppercase;color:var(--ac);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.ct::after{content:'';flex:1;height:1px;background:var(--bd);}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fi{display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--bg3);border-radius:6px;}
+.fico{font-size:16px;margin-top:1px;}
+.fit h4{font:700 11px/1 var(--S);margin-bottom:2px;}
+.fit p{font:400 10px/1.35 var(--S);color:var(--tx2);}
+.clr{display:flex;gap:13px;padding:11px 0;border-bottom:1px solid var(--bd);}
+.clr:last-child{border-bottom:none;}
+.clv{font:700 10px/1 var(--M);color:var(--ac);white-space:nowrap;min-width:40px;}
+.cld{font:400 9px/1 var(--M);color:var(--tx3);margin-top:2px;}
+.cle h4{font:700 11px/1 var(--S);margin-bottom:3px;}
+.cle ul{padding-left:13px;}
+.cle li{font:400 10px/1.5 var(--S);color:var(--tx2);margin-bottom:1px;}
+.tag{display:inline-block;padding:1px 5px;border-radius:3px;font:700 8px/1 var(--M);margin-right:3px;}
+.tn{background:rgba(68,217,134,.14);color:var(--g);}
+.tf{background:rgba(255,79,79,.14);color:var(--r);}
+.ti{background:rgba(78,168,255,.14);color:var(--ac3);}
+.setr{display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg3);border-radius:6px;margin-bottom:7px;flex-wrap:wrap;gap:7px;}
+.setr:last-child{margin-bottom:0;}
+.setl h4{font:500 12px/1 var(--S);}
+.setl p{font:400 9px/1 var(--S);color:var(--tx3);margin-top:2px;}
+.tog{width:36px;height:18px;background:var(--bd);border-radius:9px;position:relative;cursor:pointer;transition:background var(--T);flex-shrink:0;}
+.tog.on{background:var(--ac);}
 .tog::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left var(--T);}
 .tog.on::after{left:20px;}
-.ss{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font:400 10px/1 var(--M);outline:none;cursor:pointer;}
+.csel{background:var(--bg2);border:1px solid var(--bd);border-radius:5px;padding:4px 6px;color:var(--tx);font:400 10px/1 var(--M);outline:none;cursor:pointer;}
 
-.about-hero{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:26px;margin-bottom:14px;position:relative;overflow:hidden;}
-.about-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(245,200,66,.06) 0%,transparent 70%);pointer-events:none;}
-.ah-title{font:700 24px/1.1 var(--M);letter-spacing:-.03em;margin-bottom:7px;}
-.ah-title span{color:var(--accent);}
-.ah-desc{font:400 13px/1.7 var(--S);color:var(--text2);}
-.ah-links{margin-top:16px;display:flex;gap:6px;flex-wrap:wrap;}
-.alink{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font:400 10px/1 var(--M);color:var(--text2);text-decoration:none;transition:border-color var(--T),color var(--T);}
-.alink:hover{border-color:var(--accent);color:var(--accent);}
-
-.author-badge{display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-top:14px;}
-.author-av{width:32px;height:32px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 13px/1 var(--M);color:#000;flex-shrink:0;}
-.author-name{font:700 12px/1 var(--S);margin-bottom:2px;}
-.author-gh{font:400 10px/1 var(--M);color:var(--text3);}
-.author-gh a{color:var(--accent3);text-decoration:none;}
-.author-gh a:hover{text-decoration:underline;}
+/* ABOUT HERO */
+.ah{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--R);padding:26px;margin-bottom:14px;position:relative;overflow:hidden;}
+.ah::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(245,200,66,.06) 0%,transparent 70%);pointer-events:none;}
+.aht{font:700 24px/1.1 var(--M);letter-spacing:-.03em;margin-bottom:7px;}
+.aht span{color:var(--ac);}
+.ahd{font:400 13px/1.7 var(--S);color:var(--tx2);}
+.ahl{margin-top:16px;display:flex;gap:6px;flex-wrap:wrap;}
+.aln{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;font:400 10px/1 var(--M);color:var(--tx2);text-decoration:none;transition:border-color var(--T),color var(--T);}
+.aln:hover{border-color:var(--ac);color:var(--ac);}
+.authr{display:inline-flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:11px 14px;margin-top:14px;}
+.av{width:34px;height:34px;background:var(--ac);border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 13px/1 var(--M);color:#000;flex-shrink:0;}
+.an{font:700 12px/1.3 var(--S);}
+.ag{font:400 10px/1 var(--M);color:var(--tx3);}
+.ag a{color:var(--ac3);text-decoration:none;}
+.ag a:hover{text-decoration:underline;}
 
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-::-webkit-scrollbar-thumb:hover{background:var(--text3);}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:var(--tx3);}
 
 @media(max-width:700px){
-  .layout{grid-template-columns:1fr;grid-template-rows:58px auto 1fr;}
-  .sidebar{flex-direction:row;border-right:none;border-bottom:1px solid var(--border);padding:8px 0;overflow-x:auto;gap:0;}
-  .s-sec{margin-bottom:0;}
-  .s-lbl,.api-area,.saved-sect{display:none;}
-  .nav-btn{width:auto;white-space:nowrap;}
-  .feat-grid{grid-template-columns:1fr;}
+  .layout{grid-template-columns:1fr;grid-template-rows:56px auto 1fr;}
+  .sidebar{flex-direction:row;border-right:none;border-bottom:1px solid var(--bd);padding:8px 0;overflow-x:auto;display:flex;}
+  .ss{margin-bottom:0;}
+  .sl,.api-area,.saved-area{display:none;}
+  .nb{width:auto;white-space:nowrap;}
+  .fg{grid-template-columns:1fr;}
   #clock{display:none;}
 }
 </style>
@@ -262,397 +239,472 @@ header{
 <body data-theme="dark">
 <div class="layout">
 
-<!-- ═══════════ HEADER ═══════════ -->
+<!-- HEADER -->
 <header>
   <div class="logo">
-    <div class="logo-badge">PID</div>
+    <div class="logo-ic">PID</div>
     <div>
-      <div class="logo-name">Odjezdová tabule</div>
-      <div class="logo-sub">CIS · Golemio API v2</div>
+      <div class="logo-nm">Odjezdová tabule</div>
+      <div class="logo-sb">CIS · Golemio API v2</div>
     </div>
   </div>
-  <div class="hdr-r">
-    <div class="live"><div class="live-dot"></div>ŽIVĚ</div>
+  <div class="hr">
+    <div class="live"><div class="ld"></div>ŽIVĚ</div>
     <div id="clock">--:--:--</div>
-    <div class="themes">
-      <button class="tb on" data-t="dark"  onclick="setTheme('dark')"><span class="tbt">Noční</span></button>
-      <button class="tb"    data-t="light" onclick="setTheme('light')"><span class="tbt">Denní</span></button>
-      <button class="tb"    data-t="tram"  onclick="setTheme('tram')"><span class="tbt">Tramvaj</span></button>
-      <button class="tb"    data-t="metro" onclick="setTheme('metro')"><span class="tbt">Metro</span></button>
+    <div class="tpick">
+      <button class="tb on" data-t="dark"     onclick="setTheme('dark')"><span class="tbt">Noční</span></button>
+      <button class="tb"    data-t="light"    onclick="setTheme('light')"><span class="tbt">Denní</span></button>
+      <button class="tb"    data-t="tram"     onclick="setTheme('tram')"><span class="tbt">Tramvaj</span></button>
+      <button class="tb"    data-t="metro"    onclick="setTheme('metro')"><span class="tbt">Metro</span></button>
       <button class="tb"    data-t="terminal" onclick="setTheme('terminal')"><span class="tbt">Terminál</span></button>
     </div>
   </div>
 </header>
 
-<!-- ═══════════ SIDEBAR ═══════════ -->
+<!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="s-sec">
-    <span class="s-lbl">Navigace</span>
-    <button class="nav-btn active" onclick="nav('departures',this)"><span class="ni">🚏</span> Odjezdy</button>
-    <button class="nav-btn" onclick="nav('vehicles',this)"><span class="ni">🚌</span> Vozidla</button>
-    <button class="nav-btn" onclick="nav('settings',this)"><span class="ni">⚙️</span> Nastavení</button>
-    <button class="nav-btn" onclick="nav('about',this)"><span class="ni">ℹ️</span> O aplikaci</button>
+  <div class="ss">
+    <span class="sl">Navigace</span>
+    <button class="nb on" onclick="goPage('dep',this)"><span class="ni">🚏</span>Odjezdy</button>
+    <button class="nb"    onclick="goPage('veh',this)"><span class="ni">🚌</span>Vozidla</button>
+    <button class="nb"    onclick="goPage('set',this)"><span class="ni">⚙️</span>Nastavení</button>
+    <button class="nb"    onclick="goPage('abo',this)"><span class="ni">ℹ️</span>O aplikaci</button>
   </div>
-
-  <div class="api-area">
-    <span class="s-lbl" style="display:block">Golemio API klíč</span>
-    <input class="api-input" type="password" id="apiKey" placeholder="Vložte klíč…" autocomplete="off">
-    <button class="api-btn" onclick="saveKey()">💾 Uložit klíč</button>
-    <div class="api-st" id="keySt"></div>
-    <div style="margin-top:6px;font:400 9px/1.5 var(--M);color:var(--text3)">Klíč zdarma:<br><a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--accent3);text-decoration:none">api.golemio.cz →</a></div>
+  <div class="ss api-area">
+    <span class="sl">Golemio API klíč</span>
+    <input class="ai" type="password" id="apiKey" placeholder="Vložte klíč…" autocomplete="off">
+    <button class="ab" onclick="saveKey()">💾 Uložit klíč</button>
+    <div class="ast" id="keySt"></div>
+    <div style="margin-top:7px;font:400 9px/1.6 var(--M);color:var(--tx3)">
+      Klíč zdarma na:<br>
+      <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--ac3);text-decoration:none">api.golemio.cz →</a>
+    </div>
   </div>
-
-  <div class="s-sec saved-sect">
-    <span class="s-lbl">Oblíbené zastávky</span>
+  <div class="ss saved-area">
+    <span class="sl">Oblíbené zastávky</span>
     <div id="savedList"></div>
   </div>
 </aside>
 
-<!-- ═══════════ MAIN ═══════════ -->
+<!-- MAIN -->
 <main class="main">
 
 <!-- ─── ODJEZDY ─── -->
-<div class="page active" id="page-departures">
+<div class="page on" id="page-dep">
   <div class="sbar">
-    <input class="sinput" id="q" type="text"
-      placeholder="Hledat zastávku (např. Anděl, Náměstí Míru, Hlavní nádraží…)"
-      oninput="debSearch()" onkeydown="if(event.key==='Enter')doSearch()">
-    <button class="sbtn" onclick="doSearch()">🔍 Hledat</button>
+    <input class="sinp" id="q" type="text"
+      placeholder="Hledat zastávku (např. Anděl, Muzeum, Hlavní nádraží…)"
+      oninput="debSrch()" onkeydown="if(event.key==='Enter')doSrch()">
+    <button class="sbtn" onclick="doSrch()">🔍 Hledat</button>
   </div>
-  <div class="sresults" id="sr"></div>
+  <div class="sdrop" id="sdrop"></div>
   <div class="errbox" id="edep"></div>
   <div id="board">
-    <div class="sbox">
-      <div class="sbox-icon">🚏</div>
-      <div class="sbox-title">Vyhledejte zastávku</div>
-      <div class="sbox-desc">Napište název zastávky a stiskněte Enter. API klíč je nutný — zadejte ho vlevo.</div>
+    <div class="stb">
+      <div class="sti">🚏</div>
+      <div class="stt">Vyhledejte zastávku</div>
+      <div class="std">Napište název zastávky a stiskněte Enter nebo vyberte ze seznamu. API klíč zadejte vlevo.</div>
     </div>
   </div>
 </div>
 
 <!-- ─── VOZIDLA ─── -->
-<div class="page" id="page-vehicles">
+<div class="page" id="page-veh">
   <div class="pg-title">🚌 Vozidla v provozu</div>
   <div class="pg-sub">Živé polohy vozidel PID — vyžaduje API klíč</div>
   <div class="sbar">
-    <input class="sinput" id="vq" type="text" placeholder="Filtrovat dle linky (např. 22, A, 207)…" oninput="filterVeh()">
-    <button class="sbtn" onclick="loadVeh()">⟳ Načíst</button>
+    <input class="sinp" id="vq" type="text" placeholder="Filtrovat dle linky (22, A, 207)…" oninput="filtV()">
+    <button class="sbtn" onclick="loadV()">⟳ Načíst</button>
   </div>
   <div class="errbox" id="eveh"></div>
-  <div id="vboard">
-    <div class="sbox"><div class="sbox-icon">🗺️</div><div class="sbox-title">Klikněte na Načíst</div><div class="sbox-desc">Zobrazí aktuální polohy a zpoždění vozidel.</div></div>
+  <div id="vb">
+    <div class="stb"><div class="sti">🗺️</div><div class="stt">Klikněte na Načíst</div><div class="std">Zobrazí polohy a zpoždění vozidel PID.</div></div>
   </div>
 </div>
 
 <!-- ─── NASTAVENÍ ─── -->
-<div class="page" id="page-settings">
+<div class="page" id="page-set">
   <div class="pg-title">⚙️ Nastavení</div>
   <div class="pg-sub">Přizpůsobte si aplikaci</div>
   <div class="card">
-    <div class="card-title">Odjezdy</div>
-    <div class="set-row"><div class="sl"><h4>Automatické obnovení</h4><p>Interval v sekundách</p></div>
-      <select class="ss" id="cfgR" onchange="sc('refresh',this.value)">
+    <div class="ct">Odjezdy</div>
+    <div class="setr"><div class="setl"><h4>Automatické obnovení</h4><p>Interval obnovení</p></div>
+      <select class="csel" id="cfgR" onchange="sc('r',this.value)">
         <option value="20">20s</option><option value="30" selected>30s</option>
         <option value="45">45s</option><option value="60">60s</option><option value="0">Vypnout</option>
       </select></div>
-    <div class="set-row"><div class="sl"><h4>Počet odjezdů</h4><p>Max. počet najednou</p></div>
-      <select class="ss" id="cfgL" onchange="sc('lim',this.value)">
+    <div class="setr"><div class="setl"><h4>Počet odjezdů</h4><p>Maximální počet najednou</p></div>
+      <select class="csel" id="cfgL" onchange="sc('l',this.value)">
         <option value="5">5</option><option value="10" selected>10</option>
         <option value="15">15</option><option value="20">20</option>
       </select></div>
-    <div class="set-row"><div class="sl"><h4>Přeskočit "u zastávky"</h4><p>Nezobrazit odj. ze zastávky</p></div>
-      <div class="tog on" id="tSkip" onclick="st('skip',this)"></div></div>
-    <div class="set-row"><div class="sl"><h4>Klimatizace ❄️</h4><p>Ikona u vybavených vozidel</p></div>
+    <div class="setr"><div class="setl"><h4>Přeskočit "u zastávky"</h4><p>Nezobrazit právě odjíždějící</p></div>
+      <div class="tog on" id="tSkip" onclick="st('sk',this)"></div></div>
+    <div class="setr"><div class="setl"><h4>Klimatizace ❄️</h4><p>Ikona u vybavených vozidel</p></div>
       <div class="tog on" id="tAC" onclick="st('ac',this)"></div></div>
-    <div class="set-row"><div class="sl"><h4>Zobrazení času</h4><p>Minuty nebo čas odjezdu</p></div>
-      <select class="ss" id="cfgT" onchange="sc('tm',this.value)">
-        <option value="minutes" selected>Minuty</option><option value="time">Čas odjezdu</option><option value="both">Obojí</option>
+    <div class="setr"><div class="setl"><h4>Zobrazení času</h4><p>Minuty nebo čas odjezdu</p></div>
+      <select class="csel" id="cfgT" onchange="sc('tm',this.value)">
+        <option value="m" selected>Minuty</option><option value="t">Čas odjezdu</option><option value="b">Obojí</option>
       </select></div>
   </div>
   <div class="card">
-    <div class="card-title">Téma</div>
-    <div class="set-row">
-      <div class="sl"><h4>Barevné schéma</h4></div>
+    <div class="ct">Téma</div>
+    <div class="setr">
+      <div class="setl"><h4>Barevné schéma</h4></div>
       <div style="display:flex;gap:5px;flex-wrap:wrap">
-        <button onclick="setTheme('dark')" class="sbtn" style="padding:5px 9px;font-size:10px">🌙 Noční</button>
-        <button onclick="setTheme('light')" class="sbtn" style="padding:5px 9px;font-size:10px;background:var(--bg3);color:var(--text)">☀️ Denní</button>
-        <button onclick="setTheme('tram')" class="sbtn" style="padding:5px 9px;font-size:10px;background:rgba(68,217,134,.18);color:var(--green)">🚃 Tramvaj</button>
-        <button onclick="setTheme('metro')" class="sbtn" style="padding:5px 9px;font-size:10px;background:rgba(78,168,255,.18);color:var(--accent3)">🚇 Metro</button>
+        <button onclick="setTheme('dark')"     class="sbtn" style="padding:5px 9px;font-size:10px">🌙 Noční</button>
+        <button onclick="setTheme('light')"    class="sbtn" style="padding:5px 9px;font-size:10px;background:var(--bg3);color:var(--tx)">☀️ Denní</button>
+        <button onclick="setTheme('tram')"     class="sbtn" style="padding:5px 9px;font-size:10px;background:rgba(68,217,134,.18);color:var(--g)">🚃 Tramvaj</button>
+        <button onclick="setTheme('metro')"    class="sbtn" style="padding:5px 9px;font-size:10px;background:rgba(78,168,255,.18);color:var(--ac3)">🚇 Metro</button>
         <button onclick="setTheme('terminal')" class="sbtn" style="padding:5px 9px;font-size:10px;background:#000;color:#00ff41">💻 Terminál</button>
       </div>
     </div>
   </div>
   <div class="card">
-    <div class="card-title">Data</div>
-    <div class="set-row"><div class="sl"><h4>Smazat oblíbené</h4><p>Odstraní všechny uložené zastávky</p></div>
-      <button onclick="clearSaved()" style="padding:4px 9px;font:700 10px/1 var(--M);background:rgba(255,79,79,.14);color:var(--red);border:1px solid rgba(255,79,79,.28);border-radius:5px;cursor:pointer">Smazat</button></div>
-    <div class="set-row"><div class="sl"><h4>Smazat API klíč</h4><p>Odstraní z paměti prohlížeče</p></div>
-      <button onclick="clearKey()" style="padding:4px 9px;font:700 10px/1 var(--M);background:rgba(255,79,79,.14);color:var(--red);border:1px solid rgba(255,79,79,.28);border-radius:5px;cursor:pointer">Smazat</button></div>
+    <div class="ct">Data</div>
+    <div class="setr"><div class="setl"><h4>Smazat oblíbené</h4><p>Odstraní uložené zastávky</p></div>
+      <button onclick="clrSaved()" style="padding:4px 9px;font:700 10px/1 var(--M);background:rgba(255,79,79,.14);color:var(--r);border:1px solid rgba(255,79,79,.28);border-radius:5px;cursor:pointer">Smazat</button></div>
+    <div class="setr"><div class="setl"><h4>Smazat API klíč</h4><p>Odstraní z paměti prohlížeče</p></div>
+      <button onclick="clrKey()" style="padding:4px 9px;font:700 10px/1 var(--M);background:rgba(255,79,79,.14);color:var(--r);border:1px solid rgba(255,79,79,.28);border-radius:5px;cursor:pointer">Smazat</button></div>
   </div>
 </div>
 
 <!-- ─── O APLIKACI ─── -->
-<div class="page" id="page-about" style="max-width:680px">
-  <div class="about-hero">
-    <div class="ah-title">PID <span>Odjezdová</span><br>Tabule</div>
-    <div class="ah-desc">Webová aplikace pro živé odjezdy Pražské integrované dopravy pomocí <strong>Golemio API v2</strong> a systému <strong>CIS</strong> (Celostátní informační systém o jízdních řádech).</div>
-    <div class="ah-links">
-      <a class="alink" href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank">🔑 Získat API klíč</a>
-      <a class="alink" href="https://api.golemio.cz/v2/pid/docs/openapi/" target="_blank">📖 API Dokumentace</a>
-      <a class="alink" href="https://pid.cz/o-systemu/opendata/" target="_blank">📊 Opendata PID</a>
+<div class="page" id="page-abo" style="max-width:680px">
+  <div class="ah">
+    <div class="aht">PID <span>Odjezdová</span><br>Tabule</div>
+    <div class="ahd">Webová aplikace pro živé odjezdy Pražské integrované dopravy pomocí <strong>Golemio API v2</strong> a systému <strong>CIS</strong>.</div>
+    <div class="ahl">
+      <a class="aln" href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank">🔑 Získat API klíč</a>
+      <a class="aln" href="https://api.golemio.cz/v2/pid/docs/openapi/" target="_blank">📖 API Dokumentace</a>
+      <a class="aln" href="https://pid.cz/o-systemu/opendata/" target="_blank">📊 Opendata PID</a>
     </div>
-    <div class="author-badge">
-      <div class="author-av">JR</div>
+    <div class="authr">
+      <div class="av">JR</div>
       <div>
-        <div class="author-name">Jakub Růžička</div>
-        <div class="author-gh">GitHub: <a href="https://github.com/thejakubruzicka" target="_blank">@thejakubruzicka</a></div>
+        <div class="an">Jakub Růžička</div>
+        <div class="ag">GitHub: <a href="https://github.com/thejakubruzicka" target="_blank">@thejakubruzicka</a></div>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">Jak začít</div>
-    <div style="font:400 12px/1.9 var(--S);color:var(--text2)">
-      <strong style="color:var(--text)">1.</strong> Zaregistrujte se na <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--accent3);text-decoration:none">api.golemio.cz</a> a získejte bezplatný API klíč.<br>
-      <strong style="color:var(--text)">2.</strong> Vložte klíč do pole v levém panelu a klikněte <em>Uložit klíč</em>.<br>
-      <strong style="color:var(--text)">3.</strong> Přejděte na <em>Odjezdy</em> a hledejte zastávku (min. 2 znaky).<br>
-      <strong style="color:var(--text)">4.</strong> Uložte oblíbené zastávky kliknutím na ⭐ u tabule.<br>
-      <strong style="color:var(--text)">5.</strong> Přizpůsobte aplikaci v sekci <em>Nastavení</em>.
+    <div class="ct">Jak začít</div>
+    <div style="font:400 12px/1.9 var(--S);color:var(--tx2)">
+      <strong style="color:var(--tx)">1.</strong> Zaregistrujte se na <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--ac3);text-decoration:none">api.golemio.cz</a> a získejte bezplatný API klíč.<br>
+      <strong style="color:var(--tx)">2.</strong> Vložte klíč do pole v levém panelu a klikněte <em>Uložit klíč</em>.<br>
+      <strong style="color:var(--tx)">3.</strong> Přejděte na <em>Odjezdy</em> a hledejte zastávku (min. 2 znaky).<br>
+      <strong style="color:var(--tx)">4.</strong> Uložte oblíbené zastávky kliknutím na ⭐ u tabule.<br>
+      <strong style="color:var(--tx)">5.</strong> Přizpůsobte si aplikaci v sekci <em>Nastavení</em>.
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">Funkce</div>
-    <div class="feat-grid">
-      <div class="feat"><div class="feat-ico">🚏</div><div class="feat-t"><h4>Živé odjezdy</h4><p>Data z Golemio API s auto-obnovením</p></div></div>
-      <div class="feat"><div class="feat-ico">🔍</div><div class="feat-t"><h4>Hledání zastávek</h4><p>Fulltextové hledání přes GTFS data</p></div></div>
-      <div class="feat"><div class="feat-ico">🚌</div><div class="feat-t"><h4>Přehled vozidel</h4><p>Polohy a zpoždění v reálném čase</p></div></div>
-      <div class="feat"><div class="feat-ico">⭐</div><div class="feat-t"><h4>Oblíbené zastávky</h4><p>Rychlý přístup z postranního panelu</p></div></div>
-      <div class="feat"><div class="feat-ico">🎨</div><div class="feat-t"><h4>5 barevných témat</h4><p>Noční · Denní · Tramvaj · Metro · Terminál</p></div></div>
-      <div class="feat"><div class="feat-ico">🔄</div><div class="feat-t"><h4>Auto-obnovení</h4><p>Nastavitelný interval 20–60 s</p></div></div>
+    <div class="ct">Funkce</div>
+    <div class="fg">
+      <div class="fi"><div class="fico">🚏</div><div class="fit"><h4>Živé odjezdy</h4><p>Reálná data z Golemio API s auto-obnovením</p></div></div>
+      <div class="fi"><div class="fico">🔍</div><div class="fit"><h4>Hledání zastávek</h4><p>Fulltextové hledání z PID databáze zastávek</p></div></div>
+      <div class="fi"><div class="fico">🚌</div><div class="fit"><h4>Přehled vozidel</h4><p>Polohy a zpoždění vozidel v provozu</p></div></div>
+      <div class="fi"><div class="fico">⭐</div><div class="fit"><h4>Oblíbené zastávky</h4><p>Rychlý přístup z postranního panelu</p></div></div>
+      <div class="fi"><div class="fico">🎨</div><div class="fit"><h4>5 témat</h4><p>Noční · Denní · Tramvaj · Metro · Terminál</p></div></div>
+      <div class="fi"><div class="fico">🔄</div><div class="fit"><h4>Auto-obnovení</h4><p>Nastavitelný interval 20–60 sekund</p></div></div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">Changelog &amp; Aktualizace</div>
-    <div class="cl-row">
-      <div><div class="cl-v">v2.2</div><div class="cl-d">Feb 2026</div></div>
-      <div class="cl-e"><h4><span class="tag tg-fix">OPRAVA</span>Opraveny všechny API problémy</h4>
+    <div class="ct">Changelog</div>
+    <div class="clr">
+      <div><div class="clv">v2.3</div><div class="cld">Feb 2026</div></div>
+      <div class="cle"><h4><span class="tag tf">OPRAVA</span>Opraveny API endpointy — konečně!</h4>
         <ul>
-          <li>Správný endpoint hledání: <code>/v2/gtfsstops?names=</code></li>
-          <li>Správný endpoint odjezdů: <code>/v2/pid/departureboards?ids=</code> (GTFS IDs, bez lomítka za URL)</li>
-          <li>Správný parametr <code>total=</code> místo <code>limit=</code> u odjezdů</li>
-          <li>Opraven endpoint vozidel: <code>/v2/pid/vehiclepositions</code></li>
-          <li>Přidán autor projektu: Jakub Růžička</li>
+          <li>Vyhledávání zastávek přes PID XML databázi (data.pid.cz) — spolehlivé a bez auth</li>
+          <li>Správná URL: <code>/v2/pid/departureboards/</code> <strong>se</strong> lomítkem na konci</li>
+          <li>Správné parametry: <code>ids=</code> (gtfsId z XML) + <code>total=</code> (ne limit=)</li>
+          <li>Vozidla: <code>/v2/pid/vehiclepositions/</code> se lomítkem</li>
+          <li>Autor projektu: Jakub Růžička (@thejakubruzicka)</li>
         </ul>
       </div>
     </div>
-    <div class="cl-row">
-      <div><div class="cl-v">v2.0</div><div class="cl-d">Feb 2026</div></div>
-      <div class="cl-e"><h4><span class="tag tg-new">NOVÉ</span>Kompletní přepracování UI</h4>
+    <div class="clr">
+      <div><div class="clv">v2.0</div><div class="cld">Feb 2026</div></div>
+      <div class="cle"><h4><span class="tag tn">NOVÉ</span>Kompletní přepracování UI</h4>
         <ul>
-          <li>5 barevných témat, stránka Vozidla, Nastavení, O aplikaci</li>
-          <li>Progress bar auto-obnovení, filtrace dle typu dopravy</li>
-          <li>Zobrazení zpoždění, rychlosti a klimatizace</li>
+          <li>5 barevných témat, Vozidla, Nastavení, O aplikaci</li>
+          <li>Progress bar, filtrace dle typu, zobrazení zpoždění</li>
         </ul>
       </div>
     </div>
-    <div class="cl-row">
-      <div><div class="cl-v">v1.0</div><div class="cl-d">Sep 2025</div></div>
-      <div class="cl-e"><h4><span class="tag tg-new">NOVÉ</span>První vydání</h4>
+    <div class="clr">
+      <div><div class="clv">v1.0</div><div class="cld">Sep 2025</div></div>
+      <div class="cle"><h4><span class="tag tn">NOVÉ</span>První vydání</h4>
         <ul><li>Základní odjezdová tabule s podporou MHD, tramvají, metra a vlaků</li></ul>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">Technické info</div>
-    <div style="font:400 9px/1.9 var(--M);color:var(--text3)">
-      Search:&nbsp;&nbsp;&nbsp;&nbsp; GET /v2/gtfsstops?names=&lt;q&gt;&amp;limit=10<br>
-      Odjezdy:&nbsp;&nbsp; GET /v2/pid/departureboards?ids=&lt;gtfsId&gt;&amp;total=N&amp;minutesAfter=120<br>
-      Vozidla:&nbsp;&nbsp; GET /v2/pid/vehiclepositions?limit=50<br>
-      Auth:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; X-Access-Token header · Data © Operátor ICT, a.s.
+    <div class="ct">Technické info</div>
+    <div style="font:400 9px/1.9 var(--M);color:var(--tx3)">
+      Hledání:&nbsp; PID XML — http://data.pid.cz/stops/xml/StopsByName.xml (veřejné, bez auth)<br>
+      Odjezdy:&nbsp; GET /v2/pid/departureboards/?ids=&lt;gtfsId&gt;&amp;total=N&amp;minutesAfter=120<br>
+      Vozidla:&nbsp; GET /v2/pid/vehiclepositions/?limit=50<br>
+      Auth:&nbsp;&nbsp;&nbsp;&nbsp; X-Access-Token header · Data © Operátor ICT, a.s.
     </div>
   </div>
 </div>
 
 </main>
-</div><!-- .layout -->
+</div>
 
 <script>
-// ════════════════════════════════════════
-//  CONFIG & STATE
-// ════════════════════════════════════════
-const API = 'https://api.golemio.cz/v2';
+/* ═══════════════════════════════════════
+   CONSTANTS & STATE
+═══════════════════════════════════════ */
+// ⚠️ CORRECT URLs — trailing slash is REQUIRED by Golemio
+const DEP_URL = 'https://api.golemio.cz/v2/pid/departureboards/';
+const VEH_URL = 'https://api.golemio.cz/v2/pid/vehiclepositions/';
+// Stop search: public PID XML, no auth needed
+const STOPS_XML = 'https://data.pid.cz/stops/xml/StopsByName.xml';
 
-let key   = localStorage.getItem('pid.key') || '';
-let cfg   = JSON.parse(localStorage.getItem('pid.cfg') || '{}');
-let saved = JSON.parse(localStorage.getItem('pid.saved') || '[]');
-let curId = '', curName = '';
-let timer = null, cd = 30;
-let allVeh = [];
+let apiKey  = localStorage.getItem('pid.k') || '';
+let cfg     = JSON.parse(localStorage.getItem('pid.cfg') || '{}');
+let saved   = JSON.parse(localStorage.getItem('pid.sv') || '[]');
+let curId   = '', curName = '';
+let timer   = null, cd = 30;
+let allVeh  = [];
 
-// ════════════════════════════════════════
-//  BOOT
-// ════════════════════════════════════════
+// Loaded stop list from PID XML
+let stopList = []; // [{name, gtfsId, zoneId, types}]
+
+/* ═══════════════════════════════════════
+   BOOT
+═══════════════════════════════════════ */
 window.addEventListener('load', () => {
-  setInterval(() => document.getElementById('clock').textContent = new Date().toLocaleTimeString('cs-CZ'), 1000);
-  if (key) { document.getElementById('apiKey').value = key; setKeySt('ok','✓ Klíč načten'); }
+  setInterval(() => {
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('cs-CZ');
+  }, 1000);
+
+  if (apiKey) {
+    document.getElementById('apiKey').value = apiKey;
+    setKSt('ok', '✓ Klíč načten');
+  }
+
   applyCfg();
   renderSaved();
-  const t = localStorage.getItem('pid.theme');
+
+  const t = localStorage.getItem('pid.th');
   if (t) setTheme(t);
+
+  // Pre-load stop list in background
+  loadStopList();
 });
 
-// ════════════════════════════════════════
-//  THEME
-// ════════════════════════════════════════
+/* ═══════════════════════════════════════
+   STOP LIST — PID XML
+   Parses http://data.pid.cz/stops/xml/StopsByName.xml
+   Each <Stop> has <Name>, <gtfsIds> (comma-separated), <ZoneId>, <IsMetro> etc.
+═══════════════════════════════════════ */
+async function loadStopList() {
+  if (stopList.length > 0) return;
+  try {
+    const res  = await fetch(STOPS_XML);
+    const text = await res.text();
+    const parser = new DOMParser();
+    const xml  = parser.parseFromString(text, 'application/xml');
+    const stops = xml.querySelectorAll('Stop');
+    stopList = [];
+    stops.forEach(s => {
+      const name    = s.querySelector('Name')?.textContent?.trim() || '';
+      const gtfsRaw = s.querySelector('gtfsIds')?.textContent?.trim() || '';
+      const gtfsIds = gtfsRaw.split(',').map(x => x.trim()).filter(Boolean);
+      const zone    = s.querySelector('ZoneId')?.textContent?.trim() || '';
+      const isMet   = s.querySelector('IsMetro')?.textContent?.trim() === 'true';
+      const isTram  = s.querySelector('IsTram')?.textContent?.trim() === 'true';
+      const isTrain = s.querySelector('IsTrain')?.textContent?.trim() === 'true';
+      const isFerry = s.querySelector('IsFerry')?.textContent?.trim() === 'true';
+      if (name && gtfsIds.length) {
+        stopList.push({ name, gtfsIds, zone, isMet, isTram, isTrain, isFerry });
+      }
+    });
+    console.log(`[PID] Načteno ${stopList.length} zastávek z PID XML`);
+  } catch (err) {
+    console.warn('[PID] Nelze načíst XML zastávek:', err);
+  }
+}
+
+/* ═══════════════════════════════════════
+   THEME
+═══════════════════════════════════════ */
 function setTheme(t) {
   document.body.dataset.theme = t;
   document.querySelectorAll('.tb').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-  localStorage.setItem('pid.theme', t);
+  localStorage.setItem('pid.th', t);
 }
 
-// ════════════════════════════════════════
-//  NAV
-// ════════════════════════════════════════
-function nav(p, btn) {
-  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
-  document.getElementById('page-' + p).classList.add('active');
-  if (btn) btn.classList.add('active');
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+function goPage(p, btn) {
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(x => x.classList.remove('on'));
+  document.getElementById('page-' + p).classList.add('on');
+  if (btn) btn.classList.add('on');
 }
 
-// ════════════════════════════════════════
-//  API KEY
-// ════════════════════════════════════════
+/* ═══════════════════════════════════════
+   API KEY
+═══════════════════════════════════════ */
 function saveKey() {
   const v = document.getElementById('apiKey').value.trim();
-  if (!v) { setKeySt('err','✗ Prázdný klíč'); return; }
-  key = v; localStorage.setItem('pid.key', key); setKeySt('ok','✓ Uložen');
+  if (!v) { setKSt('err', '✗ Prázdný klíč'); return; }
+  apiKey = v; localStorage.setItem('pid.k', apiKey); setKSt('ok', '✓ Uložen');
 }
-function clearKey() {
-  key = ''; localStorage.removeItem('pid.key');
-  document.getElementById('apiKey').value = ''; setKeySt('ok','✓ Smazán');
+function clrKey() {
+  apiKey = ''; localStorage.removeItem('pid.k');
+  document.getElementById('apiKey').value = ''; setKSt('ok', '✓ Smazán');
 }
-function setKeySt(cls, msg) {
+function setKSt(cls, msg) {
   const el = document.getElementById('keySt');
-  el.textContent = msg; el.className = 'api-st ' + cls;
+  el.textContent = msg; el.className = 'ast ' + cls;
 }
 
-// ════════════════════════════════════════
-//  STOP SEARCH
-//  Endpoint: GET /v2/gtfsstops?names=<q>&limit=10
-//  Returns features[].properties.stop_id  → e.g. "U100Z1P"
-// ════════════════════════════════════════
+/* ═══════════════════════════════════════
+   STOP SEARCH (uses PID XML, no API key)
+═══════════════════════════════════════ */
 let _dt = null;
-function debSearch() { clearTimeout(_dt); _dt = setTimeout(doSearch, 420); }
+function debSrch() { clearTimeout(_dt); _dt = setTimeout(doSrch, 350); }
 
-async function doSearch() {
-  const q = document.getElementById('q').value.trim();
-  const sr = document.getElementById('sr');
-  if (q.length < 2) { sr.style.display = 'none'; return; }
-  if (!key) { showErr('edep','Zadejte API klíč v postranním panelu.'); return; }
+async function doSrch() {
+  const q   = document.getElementById('q').value.trim().toLowerCase();
+  const drop = document.getElementById('sdrop');
+  if (q.length < 2) { drop.style.display = 'none'; return; }
   hideErr('edep');
-  try {
-    // NOTE: no trailing slash, names= not name=
-    const data = await pFetch(`${API}/gtfsstops?names=${encodeURIComponent(q)}&limit=12`);
-    const stops = (data.features || []);
-    if (!stops.length) {
-      sr.innerHTML = `<div class="sri"><span class="sri-name" style="color:var(--text3)">Žádné výsledky pro „${e(q)}"</span></div>`;
-    } else {
-      // Deduplicate by stop_name to group platforms — user picks a name,
-      // then we pass the stop_id (GTFS format like U100Z1P) to the departure board
-      sr.innerHTML = stops.slice(0,10).map(s => {
-        const p  = s.properties || {};
-        const nm = p.stop_name  || '?';
-        const id = p.stop_id    || '';           // e.g. "U100Z1P"
-        const zn = p.zone_id    ? `· Zóna ${p.zone_id}` : '';
-        const rt = (p.route_type_name || '').toLowerCase();
-        const ic = rt.includes('metro') ? '🚇' : rt.includes('tram') ? '🚃' : rt.includes('ferry') ? '⛴' : '🚌';
-        return `<div class="sri" onclick="loadDep('${esc(id)}','${esc(nm)}')">
-          <div>
-            <div class="sri-name">${ic} ${nm}</div>
-            <div class="sri-meta">${id} ${zn}</div>
-          </div>
-          <span style="color:var(--text3);font-size:12px">›</span>
-        </div>`;
-      }).join('');
-    }
-    sr.style.display = 'block';
-  } catch(err) {
-    showErr('edep','Chyba hledání: ' + err.message);
+
+  // Ensure stop list is loaded
+  if (stopList.length === 0) {
+    drop.innerHTML = `<div class="sri"><span class="srn" style="color:var(--tx3)">Načítám databázi zastávek…</span></div>`;
+    drop.style.display = 'block';
+    await loadStopList();
   }
+
+  if (stopList.length === 0) {
+    showErr('edep', 'Nelze načíst databázi zastávek (data.pid.cz). Zkontrolujte připojení.');
+    drop.style.display = 'none';
+    return;
+  }
+
+  // Filter stops by name
+  const hits = stopList
+    .filter(s => s.name.toLowerCase().includes(q))
+    .slice(0, 10);
+
+  if (!hits.length) {
+    drop.innerHTML = `<div class="sri"><span class="srn" style="color:var(--tx3)">Žádné výsledky pro „${esc2(q)}"</span></div>`;
+    drop.style.display = 'block';
+    return;
+  }
+
+  drop.innerHTML = hits.map(s => {
+    const icon = s.isMet ? '🚇' : s.isTram ? '🚃' : s.isTrain ? '🚂' : s.isFerry ? '⛴' : '🚌';
+    // Use first gtfsId for display; loadDep will join all gtfsIds
+    const id = s.gtfsIds[0];
+    const allIds = s.gtfsIds.join(',');
+    const zn = s.zone ? `· Zóna ${s.zone}` : '';
+    return `<div class="sri" onclick="loadDep('${esc(allIds)}','${esc(s.name)}')">
+      <div>
+        <div class="srn">${icon} ${esc2(s.name)}</div>
+        <div class="srm2">${esc2(id)} ${zn}</div>
+      </div>
+      <span style="color:var(--tx3);font-size:12px">›</span>
+    </div>`;
+  }).join('');
+  drop.style.display = 'block';
 }
 
-// ════════════════════════════════════════
-//  DEPARTURE BOARD
-//  Endpoint: GET /v2/pid/departureboards?ids=<stopId>&total=N&minutesAfter=120
-//  ⚠️  Parameter is "ids" (GTFS stop_id) and "total" (not "limit")
-//  ⚠️  No trailing slash after "departureboards"
-// ════════════════════════════════════════
-async function loadDep(stopId, stopName) {
-  curId = stopId; curName = stopName;
-  document.getElementById('sr').style.display = 'none';
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#sdrop') && !e.target.closest('#q')) {
+    document.getElementById('sdrop').style.display = 'none';
+  }
+});
+
+/* ═══════════════════════════════════════
+   DEPARTURE BOARD
+   Endpoint: GET /v2/pid/departureboards/
+   Params:   ids=<gtfsId1,gtfsId2,...>  (COMMA-SEPARATED, multiple platforms)
+             total=N
+             minutesAfter=120
+             skip=atStop
+             airCondition=true
+   ⚠️ Trailing slash IS required
+═══════════════════════════════════════ */
+async function loadDep(stopIds, stopName) {
+  if (!apiKey) { showErr('edep', 'Zadejte API klíč v postranním panelu.'); return; }
+  curId = stopIds; curName = stopName;
+  document.getElementById('sdrop').style.display = 'none';
   document.getElementById('q').value = stopName;
   hideErr('edep');
-  stopTimer();
-  setBoard(`<div class="sbox"><div class="spinner"></div><div class="sbox-title">Načítám odjezdy…</div></div>`);
+  stopTmr();
+  setBoard(`<div class="stb"><div class="spin"></div><div class="stt">Načítám odjezdy…</div></div>`);
 
-  const total  = parseInt(gcfg('lim', 10));
-  const skip   = gcfg('skip', true)  ? '&skip=atStop' : '';
-  const ac     = gcfg('ac', true)    ? '&airCondition=true' : '';
+  const total = parseInt(gcfg('l', 10));
+  const skip  = gcfg('sk', true)  ? '&skip=atStop' : '';
+  const ac    = gcfg('ac', true)  ? '&airCondition=true' : '';
+
+  // Build ids param — pass all gtfsIds for this stop (all platforms)
+  const idsParam = stopIds.split(',').map(id => `ids=${encodeURIComponent(id.trim())}`).join('&');
 
   try {
-    // Correct URL: no slash, ids= (GTFS stop_id), total= (not limit=)
-    const url  = `${API}/pid/departureboards?ids=${encodeURIComponent(stopId)}&total=${total}&minutesAfter=120${skip}${ac}`;
-    const data = await pFetch(url);
-    renderBoard(data, stopId, stopName);
-    startTimer(stopId, stopName);
+    const url  = `${DEP_URL}?${idsParam}&total=${total}&minutesAfter=120${skip}${ac}`;
+    const data = await goFetch(url);
+    renderBoard(data, stopIds, stopName);
+    startTmr(stopIds, stopName);
   } catch(err) {
     showErr('edep', 'Chyba načítání: ' + err.message);
-    setBoard(`<div class="sbox"><div class="sbox-icon">⚠️</div><div class="sbox-title">Chyba</div><div class="sbox-desc">${e(err.message)}</div></div>`);
+    setBoard(`<div class="stb"><div class="sti">⚠️</div><div class="stt">Chyba</div><div class="std">${esc2(err.message)}</div></div>`);
   }
 }
 
-function renderBoard(data, stopId, stopName) {
+function renderBoard(data, stopIds, stopName) {
   const deps    = data.departures || [];
-  const isSaved = saved.some(s => s.id === stopId);
-  const tm      = gcfg('tm','minutes');
+  const isSaved = saved.some(s => s.id === stopIds);
+  const tm      = gcfg('tm', 'm');
 
   setBoard(`
-    <div class="board-hdr">
+    <div class="bh">
       <div>
-        <div class="board-title">📍 ${e(stopName)}</div>
-        <div class="board-sub">ID: ${stopId} · ${deps.length} odjezdů · ${new Date().toLocaleTimeString('cs-CZ')}</div>
+        <div class="bt">📍 ${esc2(stopName)}</div>
+        <div class="bs">${stopIds.split(',')[0]} · ${deps.length} odjezdů · ${new Date().toLocaleTimeString('cs-CZ')}</div>
       </div>
-      <div class="board-acts">
-        <button class="ic-btn" id="starBtn" onclick="toggleSaved('${esc(stopId)}','${esc(stopName)}')"
-                title="${isSaved?'Odebrat z oblíbených':'Přidat do oblíbených'}">${isSaved?'⭐':'☆'}</button>
-        <button class="ic-btn" onclick="loadDep('${esc(stopId)}','${esc(stopName)}')" title="Obnovit">⟳</button>
+      <div class="ba">
+        <button class="icb" id="starBtn"
+          onclick="togSave('${esc(stopIds)}','${esc(stopName)}')"
+          title="${isSaved ? 'Odebrat z oblíbených' : 'Přidat do oblíbených'}"
+        >${isSaved ? '⭐' : '☆'}</button>
+        <button class="icb" onclick="loadDep('${esc(stopIds)}','${esc(stopName)}')" title="Obnovit">⟳</button>
       </div>
     </div>
 
-    <div class="rbar">
-      <span class="rl">⟳ Za <span id="rcd">${gcfg('refresh',30)}</span>s</span>
-      <div class="rprog"><div class="rfill" id="rfill" style="width:100%"></div></div>
-      <span class="rl" style="color:var(--text3)">${new Date().toLocaleTimeString('cs-CZ')}</span>
+    <div class="rb2">
+      <span class="rl">⟳ Za <span id="rcd">${gcfg('r', 30)}</span>s</span>
+      <div class="rp"><div class="rf" id="rfill" style="width:100%"></div></div>
+      <span class="rl" style="color:var(--tx3)">${new Date().toLocaleTimeString('cs-CZ')}</span>
     </div>
 
     <div class="ftabs">
-      <button class="ftab on" onclick="fDep('all',this)">🔢 Vše (${deps.length})</button>
+      <button class="ft on" onclick="fDep('all',this)">🔢 Vše (${deps.length})</button>
       ${buildTabs(deps)}
     </div>
 
     ${deps.length === 0
-      ? `<div class="sbox"><div class="sbox-icon">😴</div><div class="sbox-title">Žádné odjezdy</div><div class="sbox-desc">V blízké době nejsou plánovány žádné odjezdy.</div></div>`
-      : `<table class="dtable">
+      ? `<div class="stb"><div class="sti">😴</div><div class="stt">Žádné odjezdy</div><div class="std">V blízké době nejsou plánovány žádné odjezdy.</div></div>`
+      : `<table class="dt">
           <thead><tr>
             <th>Linka</th><th>Směr</th><th>Čas</th>
-            ${tm !== 'time' ? '<th>Za</th>' : ''}
+            ${tm !== 't' ? '<th>Za</th>' : ''}
             <th>Zpoždění</th><th>Stání</th>
           </tr></thead>
-          <tbody>${deps.map((d,i) => depRow(d,i,tm)).join('')}</tbody>
+          <tbody>${deps.map((d, i) => depRow(d, i, tm)).join('')}</tbody>
         </table>`
     }`);
 }
@@ -660,45 +712,42 @@ function renderBoard(data, stopId, stopName) {
 function depRow(d, i, tm) {
   const route = d.route || {};
   const trip  = d.trip  || {};
-  // Timestamps: prefer predicted (real-time) over scheduled
-  const ts       = d.departure_timestamp || d.arrival_timestamp || {};
-  const displayTs = ts.predicted || ts.scheduled;
-  const short    = route.short_name || '?';
-  const head     = trip.headsign || '—';
-  const rtype    = rType(route.type, short);
-  const rcls     = rClass(rtype, short);
-  const timeStr  = displayTs ? new Date(displayTs).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+  const ts    = d.departure_timestamp || d.arrival_timestamp || {};
+  const disp  = ts.predicted || ts.scheduled;
+  const short = route.short_name || '?';
+  const head  = trip.headsign || '—';
+  const rtype = rType(route.type, short);
+  const rcls  = rCls(rtype, short);
+  const tstr  = disp ? new Date(disp).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}) : '--:--';
 
-  let minsHtml = '';
-  if (displayTs) {
-    const diff = Math.round((new Date(displayTs) - Date.now()) / 60000);
-    minsHtml = diff <= 0  ? `<span class="mins now">NYNÍ</span>`
-             : diff <= 2  ? `<span class="mins soon">${diff}'</span>`
-             : diff <= 5  ? `<span class="mins near">${diff}'</span>`
-             :               `<span class="mins ok">${diff}'</span>`;
+  let minHtml = '';
+  if (disp) {
+    const diff = Math.round((new Date(disp) - Date.now()) / 60000);
+    minHtml = diff <= 0 ? `<span class="mn now">NYNÍ</span>`
+            : diff <= 2 ? `<span class="mn soon">${diff}'</span>`
+            : diff <= 5 ? `<span class="mn near">${diff}'</span>`
+            :              `<span class="mn ok">${diff}'</span>`;
   }
 
-  // delay in seconds (can be negative = early)
-  const delaySec = d.delay ?? ts.delay ?? null;
+  const dsec = d.delay ?? ts.delay ?? null;
   let dlHtml = `<span class="dl" style="opacity:.3">—</span>`;
-  if (delaySec !== null) {
-    const dm = Math.round(delaySec / 60);
-    dlHtml = dm >  1 ? `<span class="dl late">+${dm}min</span>`
+  if (dsec !== null) {
+    const dm = Math.round(dsec / 60);
+    dlHtml = dm > 1  ? `<span class="dl late">+${dm}min</span>`
            : dm < -1 ? `<span class="dl early">${dm}min</span>`
            :            `<span class="dl ok">±0</span>`;
   }
 
   const platform = d.stop?.platform_code || '';
-  const acMark   = gcfg('ac',true) && d.vehicle_registration?.air_conditioned ? ' ❄️' : '';
-  const style    = `animation-delay:${i*32}ms`;
+  const acM = gcfg('ac', true) && d.vehicle_registration?.air_conditioned ? ' ❄️' : '';
 
-  return `<tr class="drow" data-rt="${rtype.toLowerCase()}" style="${style}">
-    <td><span class="rb ${rcls}">${short}</span></td>
-    <td>${e(head)}${acMark}</td>
-    <td><span style="font:700 12px/1 var(--M)">${timeStr}</span></td>
-    ${tm !== 'time' ? `<td>${minsHtml}</td>` : ''}
+  return `<tr class="dr" data-rt="${rtype.toLowerCase()}" style="animation-delay:${i*30}ms">
+    <td><span class="rbl ${rcls}">${short}</span></td>
+    <td>${esc2(head)}${acM}</td>
+    <td><span style="font:700 12px/1 var(--M)">${tstr}</span></td>
+    ${tm !== 't' ? `<td>${minHtml}</td>` : ''}
     <td>${dlHtml}</td>
-    <td style="font:400 9px/1 var(--M);color:var(--text3)">${platform}</td>
+    <td style="font:400 9px/1 var(--M);color:var(--tx3)">${platform}</td>
   </tr>`;
 }
 
@@ -706,26 +755,26 @@ function buildTabs(deps) {
   const cnt = {};
   deps.forEach(d => { const t = rType(d.route?.type, d.route?.short_name); cnt[t] = (cnt[t]||0)+1; });
   return Object.entries(cnt).map(([t,c]) =>
-    `<button class="ftab" onclick="fDep('${t.toLowerCase()}',this)">${rIcon(t)} ${t} (${c})</button>`
+    `<button class="ft" onclick="fDep('${t.toLowerCase()}',this)">${rIc(t)} ${t} (${c})</button>`
   ).join('');
 }
 
 function fDep(type, btn) {
-  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.ft').forEach(t => t.classList.remove('on'));
   btn.classList.add('on');
-  document.querySelectorAll('.drow').forEach(r => {
+  document.querySelectorAll('.dr').forEach(r => {
     r.style.display = (type === 'all' || r.dataset.rt === type) ? '' : 'none';
   });
 }
 
 function setBoard(html) { document.getElementById('board').innerHTML = html; }
 
-// ════════════════════════════════════════
-//  AUTO-REFRESH
-// ════════════════════════════════════════
-function startTimer(id, name) {
-  stopTimer();
-  const iv = parseInt(gcfg('refresh', 30));
+/* ═══════════════════════════════════════
+   AUTO-REFRESH
+═══════════════════════════════════════ */
+function startTmr(ids, name) {
+  stopTmr();
+  const iv = parseInt(gcfg('r', 30));
   if (!iv) return;
   cd = iv;
   timer = setInterval(() => {
@@ -734,55 +783,55 @@ function startTimer(id, name) {
     const fill = document.getElementById('rfill');
     if (rcd)  rcd.textContent = cd;
     if (fill) fill.style.width = (cd / iv * 100) + '%';
-    if (cd <= 0) loadDep(id, name);
+    if (cd <= 0) loadDep(ids, name);
   }, 1000);
 }
-function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+function stopTmr() { if (timer) { clearInterval(timer); timer = null; } }
 
-// ════════════════════════════════════════
-//  VEHICLES
-//  Endpoint: GET /v2/pid/vehiclepositions?limit=50
-// ════════════════════════════════════════
-async function loadVeh() {
-  if (!key) { showErr('eveh','Zadejte API klíč.'); return; }
+/* ═══════════════════════════════════════
+   VEHICLES
+   Endpoint: GET /v2/pid/vehiclepositions/   ← trailing slash
+═══════════════════════════════════════ */
+async function loadV() {
+  if (!apiKey) { showErr('eveh', 'Zadejte API klíč.'); return; }
   hideErr('eveh');
-  document.getElementById('vboard').innerHTML =
-    `<div class="sbox"><div class="spinner"></div><div class="sbox-title">Načítám vozidla…</div></div>`;
+  document.getElementById('vb').innerHTML =
+    `<div class="stb"><div class="spin"></div><div class="stt">Načítám vozidla…</div></div>`;
   try {
-    const data = await pFetch(`${API}/pid/vehiclepositions?limit=50&includeNotTracking=false`);
+    const data = await goFetch(`${VEH_URL}?limit=50&includeNotTracking=false`);
     allVeh = data.features || [];
-    filterVeh();
+    filtV();
   } catch(err) {
-    showErr('eveh','Chyba: ' + err.message);
-    document.getElementById('vboard').innerHTML =
-      `<div class="sbox"><div class="sbox-icon">⚠️</div><div class="sbox-title">Chyba</div><div class="sbox-desc">${e(err.message)}</div></div>`;
+    showErr('eveh', 'Chyba: ' + err.message);
+    document.getElementById('vb').innerHTML =
+      `<div class="stb"><div class="sti">⚠️</div><div class="stt">Chyba</div><div class="std">${esc2(err.message)}</div></div>`;
   }
 }
 
-function filterVeh() {
-  const q = document.getElementById('vq').value.trim().toUpperCase();
+function filtV() {
+  const q = (document.getElementById('vq').value || '').trim().toUpperCase();
   const list = q ? allVeh.filter(v => (v.properties?.route?.short_name||'').toUpperCase().includes(q)) : allVeh;
   if (!list.length) {
-    document.getElementById('vboard').innerHTML =
-      `<div class="sbox"><div class="sbox-icon">🚌</div><div class="sbox-title">Žádná vozidla</div></div>`;
+    document.getElementById('vb').innerHTML =
+      `<div class="stb"><div class="sti">🚌</div><div class="stt">Žádná vozidla</div></div>`;
     return;
   }
-  const cards = list.map((v,i) => {
+  const cards = list.map((v, i) => {
     const p     = v.properties || {};
     const short = p.route?.short_name || '?';
     const rtype = rType(p.route?.type, short);
-    const rcls  = rClass(rtype, short);
+    const rcls  = rCls(rtype, short);
     const head  = p.trip?.headsign || '—';
-    const delay = p.delay != null ? Math.round(p.delay/60) : null;
-    const dcls  = delay == null ? '' : delay > 1 ? 'late' : delay < -1 ? 'early' : 'ok';
+    const delay = p.delay != null ? Math.round(p.delay / 60) : null;
+    const dcls  = delay == null ? '' : delay > 1 ? 'late' : delay < -1 ? 'early' : 'ok2';
     const dtxt  = delay == null ? '—' : delay > 0 ? `+${delay}min` : delay < 0 ? `${delay}min` : '±0min';
-    const spd   = p.speed   != null ? Math.round(p.speed)+'km/h' : '—';
-    const bear  = p.bearing != null ? p.bearing+'°' : '—';
+    const spd   = p.speed   != null ? Math.round(p.speed) + ' km/h' : '—';
+    const bear  = p.bearing != null ? p.bearing + '°' : '—';
     const ac    = p.vehicle_registration?.air_conditioned;
-    return `<div class="vc" style="animation-delay:${i*22}ms">
-      <div class="vc-hd">
-        <div><span class="rb ${rcls}">${rIcon(rtype)} ${short}</span><div class="vc-hs" title="${e(head)}">${e(head)}</div></div>
-        <div class="vc-dot"></div>
+    return `<div class="vc" style="animation-delay:${i*20}ms">
+      <div class="vch">
+        <div><span class="rbl ${rcls}">${rIc(rtype)} ${short}</span><div class="vhs" title="${esc2(head)}">${esc2(head)}</div></div>
+        <div class="vdt"></div>
       </div>
       <div class="vm">
         <div class="vmi"><div class="vml">Zpoždění</div><div class="vmv ${dcls}">${dtxt}</div></div>
@@ -792,18 +841,18 @@ function filterVeh() {
       </div>
     </div>`;
   }).join('');
-  document.getElementById('vboard').innerHTML =
-    `<div style="font:400 9px/1 var(--M);color:var(--text3);margin-bottom:10px">${list.length} vozidel · ${new Date().toLocaleTimeString('cs-CZ')}</div>
-     <div class="vgrid">${cards}</div>`;
+  document.getElementById('vb').innerHTML =
+    `<div style="font:400 9px/1 var(--M);color:var(--tx3);margin-bottom:10px">${list.length} vozidel · ${new Date().toLocaleTimeString('cs-CZ')}</div>
+     <div class="vg">${cards}</div>`;
 }
 
-// ════════════════════════════════════════
-//  SAVED STOPS
-// ════════════════════════════════════════
-function toggleSaved(id, name) {
+/* ═══════════════════════════════════════
+   SAVED STOPS
+═══════════════════════════════════════ */
+function togSave(id, name) {
   const idx = saved.findIndex(s => s.id === id);
-  if (idx >= 0) saved.splice(idx, 1); else saved.push({id, name});
-  localStorage.setItem('pid.saved', JSON.stringify(saved));
+  if (idx >= 0) saved.splice(idx, 1); else saved.push({ id, name });
+  localStorage.setItem('pid.sv', JSON.stringify(saved));
   const btn = document.getElementById('starBtn');
   if (btn) btn.textContent = saved.some(s => s.id === id) ? '⭐' : '☆';
   renderSaved();
@@ -811,77 +860,79 @@ function toggleSaved(id, name) {
 function renderSaved() {
   const el = document.getElementById('savedList');
   if (!el) return;
-  if (!saved.length) { el.innerHTML = '<div class="s-empty">Žádné oblíbené</div>'; return; }
+  if (!saved.length) { el.innerHTML = '<div class="sem">Žádné oblíbené</div>'; return; }
   el.innerHTML = saved.map(s => `
-    <div class="saved-item${curId===s.id?' cur':''}" onclick="loadDep('${esc(s.id)}','${esc(s.name)}')">
-      <div><div class="si-name">🚏 ${e(s.name)}</div><div class="si-id">${s.id}</div></div>
-      <button class="si-rm" onclick="event.stopPropagation();rmSaved('${esc(s.id)}')">✕</button>
+    <div class="svi${curId === s.id ? ' cur' : ''}" onclick="loadDep('${esc(s.id)}','${esc(s.name)}')">
+      <div><div class="sn">🚏 ${esc2(s.name)}</div><div class="sid">${s.id.split(',')[0]}</div></div>
+      <button class="srm" onclick="event.stopPropagation();rmSaved('${esc(s.id)}')">✕</button>
     </div>`).join('');
 }
-function rmSaved(id) { saved=saved.filter(s=>s.id!==id); localStorage.setItem('pid.saved',JSON.stringify(saved)); renderSaved(); }
-function clearSaved() { saved=[]; localStorage.removeItem('pid.saved'); renderSaved(); }
+function rmSaved(id) { saved = saved.filter(s => s.id !== id); localStorage.setItem('pid.sv', JSON.stringify(saved)); renderSaved(); }
+function clrSaved()  { saved = []; localStorage.removeItem('pid.sv'); renderSaved(); }
 
-// ════════════════════════════════════════
-//  CONFIG
-// ════════════════════════════════════════
-function gcfg(k,def){ return cfg[k]!=null ? cfg[k] : def; }
-function sc(k,v){ cfg[k]=v; localStorage.setItem('pid.cfg',JSON.stringify(cfg)); }
-function st(k,el){ const v=!el.classList.contains('on'); el.className='tog'+(v?' on':''); sc(k,v); }
-function applyCfg(){
-  const r=document.getElementById('cfgR'); if(r) r.value=gcfg('refresh',30);
-  const l=document.getElementById('cfgL'); if(l) l.value=gcfg('lim',10);
-  const t=document.getElementById('cfgT'); if(t) t.value=gcfg('tm','minutes');
-  const sk=document.getElementById('tSkip'); if(sk) sk.className='tog'+(gcfg('skip',true)?' on':'');
-  const ac=document.getElementById('tAC');   if(ac) ac.className='tog'+(gcfg('ac',true)?' on':'');
+/* ═══════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════ */
+function gcfg(k, def) { return cfg[k] != null ? cfg[k] : def; }
+function sc(k, v)     { cfg[k] = v; localStorage.setItem('pid.cfg', JSON.stringify(cfg)); }
+function st(k, el)    { const v = !el.classList.contains('on'); el.className = 'tog' + (v ? ' on' : ''); sc(k, v); }
+function applyCfg() {
+  const r  = document.getElementById('cfgR');  if (r)  r.value  = gcfg('r', 30);
+  const l  = document.getElementById('cfgL');  if (l)  l.value  = gcfg('l', 10);
+  const t  = document.getElementById('cfgT');  if (t)  t.value  = gcfg('tm', 'm');
+  const sk = document.getElementById('tSkip'); if (sk) sk.className = 'tog' + (gcfg('sk', true) ? ' on' : '');
+  const ac = document.getElementById('tAC');   if (ac) ac.className = 'tog' + (gcfg('ac', true) ? ' on' : '');
 }
 
-// ════════════════════════════════════════
-//  ROUTE TYPE HELPERS
-// ════════════════════════════════════════
+/* ═══════════════════════════════════════
+   ROUTE TYPE HELPERS
+═══════════════════════════════════════ */
 function rType(n, short) {
   if (n===1||n===401) return 'Metro';
   if (n===0||n===900) return 'Tramvaj';
   if (n===2||n===100||n===102||n===106) return 'Vlak';
-  if (n===4)          return 'Přívoz';
-  const s = (short||'').toString().toUpperCase();
+  if (n===4) return 'Přívoz';
+  const s = (short || '').toString().toUpperCase();
   if (['A','B','C'].includes(s)) return 'Metro';
-  if (/^[PN]\d/.test(s))        return 'Noční';
+  if (/^[PN]\d/.test(s)) return 'Noční';
   return 'Bus';
 }
-function rClass(type, short) {
-  if (type==='Metro') {
-    const s=(short||'').toUpperCase();
-    return s==='A'?'rb-ma': s==='B'?'rb-mb': s==='C'?'rb-mc': 'rb-mb';
+function rCls(type, short) {
+  if (type === 'Metro') {
+    const s = (short || '').toUpperCase();
+    return s==='A' ? 'rb-ma' : s==='B' ? 'rb-mb' : s==='C' ? 'rb-mc' : 'rb-mb';
   }
-  if (type==='Tramvaj') return 'rb-tram';
-  if (type==='Vlak')    return 'rb-train';
-  if (type==='Přívoz')  return 'rb-ferry';
-  if (type==='Noční')   return 'rb-night';
+  if (type === 'Tramvaj') return 'rb-tram';
+  if (type === 'Vlak')    return 'rb-train';
+  if (type === 'Přívoz')  return 'rb-ferry';
+  if (type === 'Noční')   return 'rb-night';
   return 'rb-bus';
 }
-function rIcon(t){ return {Metro:'🚇',Tramvaj:'🚃',Vlak:'🚂',Přívoz:'⛴',Noční:'🌙',Bus:'🚌'}[t]||'🚌'; }
+function rIc(t) { return {Metro:'🚇',Tramvaj:'🚃',Vlak:'🚂',Přívoz:'⛴',Noční:'🌙',Bus:'🚌'}[t] || '🚌'; }
 
-// ════════════════════════════════════════
-//  UTILS
-// ════════════════════════════════════════
-async function pFetch(url) {
-  if (!key) throw new Error('API klíč není nastaven — zadejte ho v postranním panelu');
-  const res = await fetch(url, { headers: { 'X-Access-Token': key } });
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+async function goFetch(url) {
+  if (!apiKey) throw new Error('API klíč není nastaven — zadejte ho v postranním panelu');
+  const res = await fetch(url, { headers: { 'X-Access-Token': apiKey } });
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
     try { const j = await res.json(); msg = j.message || j.error || j.detail || msg; } catch(_) {}
-    if (res.status===401) msg = 'Neplatný nebo vypršelý API klíč (401)';
-    if (res.status===403) msg = 'Přístup odepřen (403) — zkontrolujte klíč';
-    if (res.status===404) msg = 'Endpoint nenalezen (404)';
-    if (res.status===429) msg = 'Příliš mnoho požadavků (429) — zkuste za chvíli';
+    if (res.status === 401) msg = 'Neplatný API klíč (401) — zkontrolujte klíč';
+    if (res.status === 403) msg = 'Přístup odepřen (403)';
+    if (res.status === 404) msg = 'Endpoint nenalezen (404) — kontaktujte autora';
+    if (res.status === 429) msg = 'Příliš mnoho požadavků (429) — zkuste za chvíli';
     throw new Error(msg);
   }
   return res.json();
 }
-function showErr(id, msg){ const el=document.getElementById(id); if(el){el.textContent='⚠️ '+msg; el.style.display='block';}}
-function hideErr(id){ const el=document.getElementById(id); if(el) el.style.display='none'; }
-function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function esc(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function showErr(id, msg) { const el=document.getElementById(id); if(el){el.textContent='⚠️ '+msg; el.style.display='block';} }
+function hideErr(id)      { const el=document.getElementById(id); if(el) el.style.display='none'; }
+// HTML escape for display
+function esc2(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// JS string escape for onclick attrs
+function esc(s)  { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 </script>
 </body>
 </html>
