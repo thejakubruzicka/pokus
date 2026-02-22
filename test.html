@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PID Odjezdy — Pražská integrovaná doprava</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Default theme: Dark Prague Night */
+  --bg: #0a0c10;
+  --bg2: #111318;
+  --bg3: #1a1d24;
+  --border: #252932;
+  --text: #e8eaf0;
+  --text2: #8a8f9e;
+  --text3: #545966;
+  --accent: #f5c842;
+  --accent2: #ff6b35;
+  --accent3: #4ea8ff;
+  --green: #44d986;
+  --red: #ff4f4f;
+  --orange: #ff9f40;
+  --metro-a: #00a562;
+  --metro-b: #f5c842;
+  --metro-c: #c8102e;
+  --card-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  --radius: 10px;
+  --font-mono: 'Space Mono', monospace;
+  --font-sans: 'DM Sans', sans-serif;
+  --transition: 0.2s ease;
+}
+
+[data-theme="light"] {
+  --bg: #f4f1eb;
+  --bg2: #ffffff;
+  --bg3: #ece9e0;
+  --border: #d8d3c8;
+  --text: #1a1a1a;
+  --text2: #5a5a6a;
+  --text3: #9a9aaa;
+  --accent: #d4a000;
+  --accent2: #e05020;
+  --accent3: #0060cc;
+  --card-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+
+[data-theme="tram"] {
+  --bg: #0d1a0f;
+  --bg2: #112014;
+  --bg3: #162b1a;
+  --border: #1e3524;
+  --text: #d6f5dc;
+  --text2: #6db87a;
+  --text3: #3a6644;
+  --accent: #44d986;
+  --accent2: #a8ff78;
+  --accent3: #78ffd6;
+  --card-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+[data-theme="metro"] {
+  --bg: #04060f;
+  --bg2: #080c1e;
+  --bg3: #0d1330;
+  --border: #151e40;
+  --text: #c8d8ff;
+  --text2: #6878aa;
+  --text3: #384060;
+  --accent: #4ea8ff;
+  --accent2: #a060ff;
+  --accent3: #ff60a0;
+  --card-shadow: 0 4px 24px rgba(0,0,0,0.6);
+}
+
+[data-theme="terminal"] {
+  --bg: #000000;
+  --bg2: #050505;
+  --bg3: #0a0a0a;
+  --border: #1a1a1a;
+  --text: #00ff41;
+  --text2: #007a1e;
+  --text3: #004010;
+  --accent: #00ff41;
+  --accent2: #00cc33;
+  --accent3: #00aa28;
+  --card-shadow: 0 4px 24px rgba(0,255,65,0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* LAYOUT */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+
+/* HEADER */
+header {
+  grid-column: 1 / -1;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.logo-sub {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(68,217,134,0.1);
+  border: 1px solid rgba(68,217,134,0.25);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--green);
+  letter-spacing: 0.05em;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.clock {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text2);
+  letter-spacing: 0.05em;
+}
+
+.theme-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.theme-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+.theme-btn:hover { transform: scale(1.2); }
+.theme-btn.active { border-color: var(--accent); }
+.theme-btn[data-theme="dark"] { background: #111318; }
+.theme-btn[data-theme="light"] { background: #f4f1eb; }
+.theme-btn[data-theme="tram"] { background: #112014; }
+.theme-btn[data-theme="metro"] { background: #080c1e; }
+.theme-btn[data-theme="terminal"] { background: #000; background-image: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,255,65,0.03) 1px, rgba(0,255,65,0.03) 2px); }
+
+.theme-btn-label {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.theme-btn:hover .theme-btn-label { opacity: 1; }
+
+/* SIDEBAR */
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 20px 0;
+}
+
+.nav-section {
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  padding: 0 8px;
+  margin-bottom: 8px;
+}
+
+.nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--transition), color var(--transition);
+  text-align: left;
+  margin-bottom: 2px;
+}
+
+.nav-btn:hover { background: var(--bg3); color: var(--text); }
+.nav-btn.active { background: rgba(245,200,66,0.1); color: var(--accent); }
+.nav-btn .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+/* API KEY SECTION */
+.api-section {
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+.api-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  margin-bottom: 8px;
+  padding: 0 8px;
+}
+
+.api-input-wrap {
+  position: relative;
+}
+
+.api-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.api-input:focus { border-color: var(--accent); }
+.api-input::placeholder { color: var(--text3); }
+
+.api-save-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: opacity var(--transition);
+}
+
+.api-save-btn:hover { opacity: 0.85; }
+
+.api-status {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  margin-top: 5px;
+  padding: 0 2px;
+}
+
+.api-status.ok { color: var(--green); }
+.api-status.err { color: var(--red); }
+
+/* SAVED STOPS */
+.saved-stop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--transition);
+  margin-bottom: 2px;
+}
+
+.saved-stop:hover { background: var(--bg3); }
+.saved-stop.active { background: rgba(245,200,66,0.08); }
+
+.saved-stop-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.saved-stop-id {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+}
+
+.saved-stop-remove {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+  border-radius: 4px;
+  transition: color var(--transition), background var(--transition);
+}
+
+.saved-stop-remove:hover { color: var(--red); background: rgba(255,79,79,0.08); }
+
+.empty-state {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text3);
+  font-style: italic;
+}
+
+/* MAIN CONTENT */
+.main {
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--bg);
+}
+
+/* PAGE sections */
+.page { display: none; }
+.page.active { display: block; }
+
+/* DEPARTURES PAGE */
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.search-input {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text3); }
+
+.search-btn {
+  padding: 12px 20px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: opacity var(--transition), transform 0.1s;
+  white-space: nowrap;
+}
+
+.search-btn:hover { opacity: 0.85; }
+.search-btn:active { transform: scale(0.97); }
+
+.search-results {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+  display: none;
+}
+
+.search-result-item {
+  padding: 11px 16px;
+  cursor: pointer;
+  transition: background var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--bg3); }
+
+.result-name { font-size: 14px; font-weight: 500; }
+.result-meta { font-size: 11px; font-family: var(--font-mono); color: var(--text3); }
+
+/* Departure board */
+.board-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.board-title {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.board-sub {
+  font-size: 12px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  margin-top: 4px;
+}
+
+.board-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text2);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.icon-btn:hover { background: var(--bg3); color: var(--text); border-color: var(--accent); }
+
+/* Filter tabs */
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-tab {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-tab:hover { border-color: var(--accent); color: var(--text); }
+.filter-tab.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+
+/* Departures table */
+.departures-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.departures-table thead tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.departures-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-weight: 400;
+}
+
+.dep-row {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+  animation: slideIn 0.3s ease forwards;
+  opacity: 0;
+}
+
+.dep-row:hover { background: var(--bg2); }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dep-row td {
+  padding: 11px 12px;
+  vertical-align: middle;
+}
+
+/* Route badge */
+.route-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.route-bus { background: rgba(78,168,255,0.15); color: var(--accent3); }
+.route-tram { background: rgba(255,107,53,0.15); color: var(--accent2); }
+.route-metro-a { background: rgba(0,165,98,0.2); color: var(--metro-a); }
+.route-metro-b { background: rgba(245,200,66,0.2); color: var(--metro-b); }
+.route-metro-c { background: rgba(200,16,46,0.2); color: var(--metro-c); }
+.route-night { background: rgba(138,143,158,0.15); color: var(--text2); }
+.route-train { background: rgba(180,100,255,0.15); color: #b464ff; }
+.route-ferry { background: rgba(0,200,255,0.15); color: #00c8ff; }
+
+.dep-time {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dep-time-mins {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+
+.dep-time-mins.soon { background: rgba(255,79,79,0.15); color: var(--red); }
+.dep-time-mins.near { background: rgba(255,159,64,0.15); color: var(--orange); }
+.dep-time-mins.ok { background: rgba(68,217,134,0.12); color: var(--green); }
+.dep-time-mins.now { background: var(--accent); color: #000; font-weight: 700; animation: flashNow 1s ease infinite; }
+
+@keyframes flashNow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.dep-headsign {
+  font-weight: 500;
+}
+
+.dep-delay {
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.dep-delay.late { color: var(--red); }
+.dep-delay.early { color: var(--green); }
+.dep-delay.on-time { color: var(--green); }
+
+.dep-platform {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+}
+
+.dep-type-icon {
+  font-size: 16px;
+}
+
+/* Loading / empty states */
+.state-box {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text3);
+}
+
+.state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+.state-title { font-size: 18px; font-family: var(--font-mono); color: var(--text2); margin-bottom: 8px; }
+.state-desc { font-size: 13px; line-height: 1.6; max-width: 380px; margin: 0 auto; }
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Auto-refresh bar */
+.refresh-bar-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.refresh-bar-label {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.refresh-progress {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.refresh-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 1s linear;
+  border-radius: 2px;
+}
+
+/* VEHICLE PAGE */
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.vehicle-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: border-color var(--transition), transform 0.15s;
+  cursor: pointer;
+  animation: slideIn 0.3s ease forwards;
+  opacity: 0;
+}
+
+.vehicle-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+.vc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.vc-route { }
+.vc-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.vc-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s ease infinite;
+  margin-top: 4px;
+}
+
+.vc-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.vc-meta-item {
+  background: var(--bg3);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.vc-meta-label { color: var(--text3); margin-bottom: 2px; }
+.vc-meta-value { color: var(--text); font-weight: 700; }
+
+.vc-meta-value.late { color: var(--red); }
+.vc-meta-value.on-time { color: var(--green); }
+.vc-meta-value.early { color: var(--accent3); }
+
+/* ABOUT PAGE */
+.about-container {
+  max-width: 700px;
+}
+
+.about-hero {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(245,200,66,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.about-hero-title {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+
+.about-hero-title span { color: var(--accent); }
+
+.about-hero-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text2);
+  max-width: 500px;
+}
+
+.about-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.about-section-title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg3);
+  border-radius: 8px;
+}
+
+.feature-icon { font-size: 18px; margin-top: 1px; }
+.feature-text h4 { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.feature-text p { font-size: 11px; color: var(--text2); line-height: 1.4; }
+
+/* Changelog */
+.changelog-item {
+  display: flex;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.changelog-item:last-child { border-bottom: none; }
+
+.changelog-version {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+  min-width: 55px;
+}
+
+.changelog-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+.changelog-entry h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.changelog-entry ul { padding-left: 16px; }
+.changelog-entry li { font-size: 12px; color: var(--text2); margin-bottom: 2px; line-height: 1.5; }
+
+.tag {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-right: 4px;
+}
+
+.tag-new { background: rgba(68,217,134,0.15); color: var(--green); }
+.tag-fix { background: rgba(255,79,79,0.15); color: var(--red); }
+.tag-improvement { background: rgba(78,168,255,0.15); color: var(--accent3); }
+
+/* API link */
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+  text-decoration: none;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.link-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* SETTINGS section */
+.settings-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--bg3);
+  border-radius: 8px;
+}
+
+.setting-label h4 { font-size: 13px; font-weight: 500; }
+.setting-label p { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+.toggle {
+  width: 40px;
+  height: 22px;
+  background: var(--border);
+  border-radius: 11px;
+  position: relative;
+  cursor: pointer;
+  transition: background var(--transition);
+  flex-shrink: 0;
+}
+
+.toggle.on { background: var(--accent); }
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: left var(--transition);
+}
+
+.toggle.on::after { left: 20px; }
+
+select.setting-select {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Page title */
+.page-title {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text3);
+  margin-bottom: 24px;
+}
+
+/* Error banner */
+.error-banner {
+  background: rgba(255,79,79,0.1);
+  border: 1px solid rgba(255,79,79,0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--red);
+  margin-bottom: 16px;
+  display: none;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .nav-section { margin-bottom: 0; display: flex; flex-direction: row; gap: 4px; }
+  .nav-label { display: none; }
+  .api-section, .saved-stops-section { display: none; }
+  .nav-btn { width: auto; white-space: nowrap; }
+
+  .feature-list { grid-template-columns: 1fr; }
+  .header-right .clock { display: none; }
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<div class="layout">
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">PID</div>
+      <div>
+        <div class="logo-text">Odjezdová tabule</div>
+        <div class="logo-sub">CIS · Golemio API v2</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge" id="liveBadge">
+        <div class="live-dot"></div>
+        <span>ŽIVĚ</span>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="theme-picker">
+        <button class="theme-btn active" data-theme="dark" onclick="setTheme('dark')" title="Noční Praha">
+          <span class="theme-btn-label">Noční</span>
+        </button>
+        <button class="theme-btn" data-theme="light" onclick="setTheme('light')" title="Denní">
+          <span class="theme-btn-label">Denní</span>
+        </button>
+        <button class="theme-btn" data-theme="tram" onclick="setTheme('tram')" title="Tramvaj">
+          <span class="theme-btn-label">Tramvaj</span>
+        </button>
+        <button class="theme-btn" data-theme="metro" onclick="setTheme('metro')" title="Metro">
+          <span class="theme-btn-label">Metro</span>
+        </button>
+        <button class="theme-btn" data-theme="terminal" onclick="setTheme('terminal')" title="Terminál">
+          <span class="theme-btn-label">Terminál</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Navigace</div>
+      <button class="nav-btn active" onclick="showPage('departures')">
+        <span class="nav-icon">🚏</span> Odjezdy
+      </button>
+      <button class="nav-btn" onclick="showPage('vehicles')">
+        <span class="nav-icon">🚌</span> Vozidla
+      </button>
+      <button class="nav-btn" onclick="showPage('settings')">
+        <span class="nav-icon">⚙️</span> Nastavení
+      </button>
+      <button class="nav-btn" onclick="showPage('about')">
+        <span class="nav-icon">ℹ️</span> O aplikaci
+      </button>
+    </div>
+
+    <div class="api-section">
+      <div class="api-label">API klíč (Golemio)</div>
+      <div class="api-input-wrap">
+        <input class="api-input" type="password" id="apiKeyInput" placeholder="Vložte API klíč…" autocomplete="off">
+      </div>
+      <button class="api-save-btn" onclick="saveApiKey()">💾 Uložit</button>
+      <div class="api-status" id="apiStatus"></div>
+      <div style="margin-top:8px; font-size:10px; color:var(--text3); padding:0 2px; font-family:var(--font-mono);">
+        Získejte klíč:<br>
+        <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--accent3); text-decoration:none;">api.golemio.cz →</a>
+      </div>
+    </div>
+
+    <div class="nav-section" id="savedStopsSection">
+      <div class="nav-label">Uložené zastávky</div>
+      <div id="savedStopsList"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DEPARTURES PAGE -->
+    <div class="page active" id="page-departures">
+      <div class="search-bar">
+        <input class="search-input" id="stopSearch" type="text"
+               placeholder="Hledat zastávku (např. Národní třída, Hlavní nádraží)…"
+               oninput="onStopInput()" onkeydown="if(event.key==='Enter') searchStops()">
+        <button class="search-btn" onclick="searchStops()">🔍 Hledat</button>
+      </div>
+
+      <div class="search-results" id="searchResults"></div>
+      <div class="error-banner" id="errorBanner"></div>
+
+      <!-- Board placeholder -->
+      <div id="boardContainer">
+        <div class="state-box">
+          <div class="state-icon">🚏</div>
+          <div class="state-title">Vyhledejte zastávku</div>
+          <div class="state-desc">Zadejte název zastávky do pole výše a stiskněte Hledat. Budete potřebovat Golemio API klíč pro zobrazení živých odjezdů.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VEHICLES PAGE -->
+    <div class="page" id="page-vehicles">
+      <div class="page-title">🚌 Vozidla v provozu</div>
+      <div class="page-subtitle">Aktuální polohy a stav vozidel PID (vyžaduje API klíč)</div>
+
+      <div class="search-bar">
+        <input class="search-input" id="vehicleSearch" type="text"
+               placeholder="Filtrovat podle linky (např. 22, A, 178)…"
+               oninput="filterVehicles()">
+        <button class="search-btn" onclick="loadVehicles()">⟳ Obnovit</button>
+      </div>
+
+      <div class="error-banner" id="vehicleError"></div>
+      <div id="vehicleContainer">
+        <div class="state-box">
+          <div class="state-icon">🗺️</div>
+          <div class="state-title">Načtěte vozidla</div>
+          <div class="state-desc">Klikněte na Obnovit pro načtení aktuálních poloh vozidel. Vyžaduje API klíč.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div class="page-title">⚙️ Nastavení</div>
+      <div class="page-subtitle">Přizpůsobte si aplikaci</div>
+
+      <div class="about-section">
+        <div class="about-section-title">Zobrazení</div>
+        <div class="settings-grid">
+          <div class="setting-row">
+            <div class="setting-label">
+              <h4>Automatické obnovení</h4>
+              <p>Odjezdy se obnoví každých N sekund</p>
+            </div>
+            <select class="setting-select" id="refreshInterval" onchange="updateRefreshInterval()">
+              <option value="20">20s</option>
+              <option value="30" selected>30s</option>
+              <option value="45">45s</option>
+              <option value="60">60s</option>
+              <option value="0">Vypnout</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <h4>Limit odjezdů</h4>
+              <p>Počet zobrazených odjezdů najednou</p>
+            </div>
+            <select class="setting-select" id="departureLimit" onchange="saveSetting('departureLimit', this.value)">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <h4>Přeskočit odjezdy ze zastávky</h4>
+              <p>Nezobrazovat vozidla právě odjíždějící</p>
+            </div>
+            <div class="toggle on" id="toggleSkipAtStop" onclick="toggleSetting('skipAtStop', this)"></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <h4>Zobrazit klimatizaci</h4>
+              <p>Ikona klimatizace u vozidel</p>
+            </div>
+            <div class="toggle on" id="toggleShowAC" onclick="toggleSetting('showAC', this)"></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <h4>Minuty vs čas odjezdu</h4>
+              <p>Zobrazit minuty do odjezdu nebo čas</p>
+            </div>
+            <select class="setting-select" id="timeDisplay" onchange="saveSetting('timeDisplay', this.value)">
+              <option value="minutes" selected>Minuty</option>
+              <option value="time">Čas odjezdu</option>
+              <option value="both">Obojí</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-section">
+        <div class="about-section-title">Téma</div>
+        <div class="settings-grid">
+          <div class="setting-row" style="flex-wrap:wrap; gap:10px;">
+            <div class="setting-label"><h4>Barevné schéma</h4><p>Vyberte styl zobrazení</p></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button onclick="setTheme('dark')" class="search-btn" style="padding:6px 12px; font-size:12px;">🌙 Noční</button>
+              <button onclick="setTheme('light')" class="search-btn" style="padding:6px 12px; font-size:12px; background:var(--bg3); color:var(--text);">☀️ Denní</button>
+              <button onclick="setTheme('tram')" class="search-btn" style="padding:6px 12px; font-size:12px; background:rgba(68,217,134,0.2); color:var(--green);">🚃 Tramvaj</button>
+              <button onclick="setTheme('metro')" class="search-btn" style="padding:6px 12px; font-size:12px; background:rgba(78,168,255,0.2); color:var(--accent3);">🚇 Metro</button>
+              <button onclick="setTheme('terminal')" class="search-btn" style="padding:6px 12px; font-size:12px; background:#000; color:#00ff41;">💻 Terminál</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-section">
+        <div class="about-section-title">Data</div>
+        <div class="settings-grid">
+          <div class="setting-row">
+            <div class="setting-label"><h4>Vymazat uložené zastávky</h4><p>Odstraní všechny oblíbené zastávky</p></div>
+            <button onclick="clearSavedStops()" class="search-btn" style="padding:7px 14px; background:rgba(255,79,79,0.15); color:var(--red); border:1px solid rgba(255,79,79,0.3);">Smazat</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label"><h4>Vymazat API klíč</h4><p>Odstraní uložený API klíč z prohlížeče</p></div>
+            <button onclick="clearApiKey()" class="search-btn" style="padding:7px 14px; background:rgba(255,79,79,0.15); color:var(--red); border:1px solid rgba(255,79,79,0.3);">Smazat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT PAGE -->
+    <div class="page" id="page-about">
+      <div class="about-container">
+        <div class="about-hero">
+          <div class="about-hero-title">PID <span>Odjezdová</span><br>Tabule</div>
+          <div class="about-hero-desc">
+            Neoficiální webová aplikace zobrazující živé odjezdy Pražské integrované dopravy.
+            Data jsou poskytována prostřednictvím <strong>Golemio API v2</strong> a systému
+            <strong>CIS</strong> (Celostátní informační systém).
+          </div>
+          <div style="margin-top:20px; display:flex; gap:8px; flex-wrap:wrap;">
+            <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" class="link-btn">🔑 Získat API klíč</a>
+            <a href="https://api.golemio.cz/v2/pid/docs/openapi/" target="_blank" class="link-btn">📖 API Dokumentace</a>
+            <a href="https://pid.cz/en/opendata/" target="_blank" class="link-btn">📊 Opendata PID</a>
+          </div>
+        </div>
+
+        <div class="about-section">
+          <div class="about-section-title">Funkce</div>
+          <div class="feature-list">
+            <div class="feature-item">
+              <div class="feature-icon">🚏</div>
+              <div class="feature-text">
+                <h4>Živé odjezdy</h4>
+                <p>Reálná data z Golemio API s automatickým obnovením</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">🔍</div>
+              <div class="feature-text">
+                <h4>Vyhledávání zastávek</h4>
+                <p>Fulltextové vyhledávání zastávek PID</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">🚌</div>
+              <div class="feature-text">
+                <h4>Přehled vozidel</h4>
+                <p>Aktuální polohy a zpoždění vozidel v provozu</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">⭐</div>
+              <div class="feature-text">
+                <h4>Oblíbené zastávky</h4>
+                <p>Uložte si oblíbené zastávky pro rychlý přístup</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">🎨</div>
+              <div class="feature-text">
+                <h4>5 barevných témat</h4>
+                <p>Noční, Denní, Tramvaj, Metro, Terminál</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">🔄</div>
+              <div class="feature-text">
+                <h4>Auto-obnovení</h4>
+                <p>Nastavitelný interval automatického obnovení dat</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-section">
+          <div class="about-section-title">Jak začít</div>
+          <div style="font-size:13px; line-height:1.8; color:var(--text2);">
+            <strong style="color:var(--text)">1.</strong> Zaregistrujte se na <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--accent3);">api.golemio.cz</a> a získejte bezplatný API klíč.<br>
+            <strong style="color:var(--text)">2.</strong> Vložte API klíč do postranního panelu vlevo a klikněte na <em>Uložit</em>.<br>
+            <strong style="color:var(--text)">3.</strong> Přejděte na stránku <em>Odjezdy</em> a vyhledejte zastávku.<br>
+            <strong style="color:var(--text)">4.</strong> Uložte si oblíbené zastávky kliknutím na ikonu ⭐ u tabule.<br>
+            <strong style="color:var(--text)">5.</strong> Přizpůsobte si aplikaci v sekci <em>Nastavení</em>.
+          </div>
+        </div>
+
+        <div class="about-section">
+          <div class="about-section-title">Changelog & Aktualizace</div>
+
+          <div class="changelog-item">
+            <div>
+              <div class="changelog-version">v2.0</div>
+              <div class="changelog-date">Feb 2026</div>
+            </div>
+            <div class="changelog-entry">
+              <h4><span class="tag tag-new">NOVÉ</span>Kompletní přepracování</h4>
+              <ul>
+                <li>5 barevných témat (Noční, Denní, Tramvaj, Metro, Terminál)</li>
+                <li>Nová stránka Vozidla s filtrem dle linky</li>
+                <li>Nastavení – interval obnovy, limit odjezdů, zobrazení času</li>
+                <li>Rozšířené informace o zpoždění a klimatizaci</li>
+                <li>Progress bar pro automatické obnovení</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="changelog-item">
+            <div>
+              <div class="changelog-version">v1.5</div>
+              <div class="changelog-date">Nov 2025</div>
+            </div>
+            <div class="changelog-entry">
+              <h4><span class="tag tag-improvement">ZLEPŠENÍ</span>Lepší UX a výkon</h4>
+              <ul>
+                <li>Uložené zastávky přes localStorage</li>
+                <li>Fulltextové vyhledávání zastávek pomocí GTFS dat</li>
+                <li>Responzivní design pro mobilní zařízení</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="changelog-item">
+            <div>
+              <div class="changelog-version">v1.0</div>
+              <div class="changelog-date">Sep 2025</div>
+            </div>
+            <div class="changelog-entry">
+              <h4><span class="tag tag-new">NOVÉ</span>První vydání</h4>
+              <ul>
+                <li>Základní odjezdová tabule pomocí Golemio API v2</li>
+                <li>Podpora MHD, tramvají, metra a vlaků</li>
+                <li>Zobrazení zpoždění v reálném čase</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-section">
+          <div class="about-section-title">Informace</div>
+          <div style="font-size:12px; color:var(--text3); line-height:1.7; font-family:var(--font-mono);">
+            Data poskytuje © Operátor ICT, a.s. prostřednictvím Golemio API.<br>
+            Tato aplikace není oficiálním produktem PID ani ROPID.<br>
+            API klíč je uložen pouze lokálně ve vašem prohlížeči.<br>
+            Systém CIS — Celostátní informační systém o jízdních řádech.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ============================
+// STATE
+// ============================
+let apiKey = localStorage.getItem('pid_api_key') || '';
+let currentStop = null;
+let currentStopName = '';
+let refreshTimer = null;
+let refreshCountdown = 30;
+let refreshInterval = parseInt(localStorage.getItem('pid_refresh_interval') || '30');
+let allVehicles = [];
+let savedStops = JSON.parse(localStorage.getItem('pid_saved_stops') || '[]');
+let settings = JSON.parse(localStorage.getItem('pid_settings') || '{}');
+const GOLEMIO = 'https://api.golemio.cz/v2/pid';
+
+// ============================
+// INIT
+// ============================
+window.addEventListener('load', () => {
+  updateClock();
+  setInterval(updateClock, 1000);
+  loadSettings();
+  renderSavedStops();
+
+  if (apiKey) {
+    document.getElementById('apiKeyInput').value = apiKey;
+    document.getElementById('apiStatus').textContent = '✓ Klíč načten z paměti';
+    document.getElementById('apiStatus').className = 'api-status ok';
+  }
+});
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('cs-CZ');
+}
+
+// ============================
+// THEME
+// ============================
+function setTheme(theme) {
+  document.body.dataset.theme = theme;
+  document.querySelectorAll('.theme-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.theme === theme);
+  });
+  localStorage.setItem('pid_theme', theme);
+}
+
+const savedTheme = localStorage.getItem('pid_theme');
+if (savedTheme) setTheme(savedTheme);
+
+// ============================
+// NAVIGATION
+// ============================
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.textContent.toLowerCase().includes(
+      page === 'departures' ? 'odjezdy' :
+      page === 'vehicles' ? 'vozidla' :
+      page === 'settings' ? 'nastaven' : 'o aplikaci'
+    )) b.classList.add('active');
+  });
+}
+
+// ============================
+// API KEY
+// ============================
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val) {
+    showApiStatus('err', '✗ Prázdný klíč');
+    return;
+  }
+  apiKey = val;
+  localStorage.setItem('pid_api_key', apiKey);
+  showApiStatus('ok', '✓ Klíč uložen');
+}
+
+function clearApiKey() {
+  apiKey = '';
+  localStorage.removeItem('pid_api_key');
+  document.getElementById('apiKeyInput').value = '';
+  showApiStatus('ok', '✓ Klíč odstraněn');
+}
+
+function showApiStatus(cls, msg) {
+  const el = document.getElementById('apiStatus');
+  el.textContent = msg;
+  el.className = 'api-status ' + cls;
+}
+
+// ============================
+// STOP SEARCH
+// ============================
+let searchDebounce = null;
+
+function onStopInput() {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(searchStops, 400);
+}
+
+async function searchStops() {
+  const q = document.getElementById('stopSearch').value.trim();
+  if (q.length < 2) {
+    document.getElementById('searchResults').style.display = 'none';
+    return;
+  }
+  if (!apiKey) {
+    showError('Nejprve zadejte API klíč v postranním panelu.', 'errorBanner');
+    return;
+  }
+
+  try {
+    const url = `${GOLEMIO}/gtfsstops?limit=10&offset=0&names=${encodeURIComponent(q)}`;
+    const res = await fetch(url, { headers: { 'X-Access-Token': apiKey } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    renderStopResults(data.features || []);
+  } catch (e) {
+    showError('Chyba při vyhledávání zastávek: ' + e.message, 'errorBanner');
+  }
+}
+
+function renderStopResults(stops) {
+  const el = document.getElementById('searchResults');
+  if (!stops.length) {
+    el.innerHTML = '<div class="search-result-item"><span class="result-name" style="color:var(--text3)">Žádné výsledky</span></div>';
+    el.style.display = 'block';
+    return;
+  }
+
+  el.innerHTML = stops.slice(0, 8).map(s => {
+    const props = s.properties || {};
+    const name = props.stop_name || 'Neznámá zastávka';
+    const id = props.stop_id || '';
+    const zone = props.zone_id || '';
+    const types = (props.route_type_name || '').toLowerCase();
+    const icon = types.includes('metro') ? '🚇' : types.includes('tram') ? '🚃' : types.includes('ferry') ? '⛴' : '🚌';
+    return `<div class="search-result-item" onclick="loadDepartures('${id}', '${name.replace(/'/g, "\\'")}')">
+      <div>
+        <div class="result-name">${icon} ${name}</div>
+        <div class="result-meta">ID: ${id} ${zone ? '· Zóna: ' + zone : ''}</div>
+      </div>
+      <div style="font-size:12px; color:var(--text3)">›</div>
+    </div>`;
+  }).join('');
+  el.style.display = 'block';
+}
+
+// ============================
+// DEPARTURES
+// ============================
+async function loadDepartures(stopId, stopName) {
+  currentStop = stopId;
+  currentStopName = stopName;
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('stopSearch').value = stopName;
+  hideError('errorBanner');
+
+  const limit = getSetting('departureLimit', 10);
+  const skip = getSetting('skipAtStop', true) ? 'atStop' : '';
+  const ac = getSetting('showAC', true) ? 'true' : 'false';
+
+  showBoardLoading(stopName);
+  clearAutoRefresh();
+
+  try {
+    let url = `${GOLEMIO}/departureboards?aswIds=${encodeURIComponent(stopId)}&limit=${limit}&minutesAfter=120&mode=departures&airCondition=${ac}`;
+    if (skip) url += `&skip=${skip}`;
+
+    const res = await fetch(url, { headers: { 'X-Access-Token': apiKey } });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    renderBoard(data, stopName, stopId);
+    startAutoRefresh(stopId, stopName);
+  } catch (e) {
+    showError('Chyba při načítání odjezdů: ' + e.message, 'errorBanner');
+    showBoardError(stopName);
+  }
+}
+
+function renderBoard(data, stopName, stopId) {
+  const departures = data.departures || [];
+  const stopInfo = data.stop_name || stopName;
+  const isSaved = savedStops.some(s => s.id === stopId);
+  const timeMode = getSetting('timeDisplay', 'minutes');
+
+  const boardHtml = `
+    <div class="board-header">
+      <div>
+        <div class="board-title">📍 ${stopInfo}</div>
+        <div class="board-sub">Zastávka · ID: ${stopId} · ${departures.length} odjezdů</div>
+      </div>
+      <div class="board-actions">
+        <button class="icon-btn" title="${isSaved ? 'Odebrat z oblíbených' : 'Přidat do oblíbených'}"
+                id="saveStopBtn"
+                onclick="toggleSaveStop('${stopId}', '${stopName.replace(/'/g, "\\'")}')">
+          ${isSaved ? '⭐' : '☆'}
+        </button>
+        <button class="icon-btn" title="Obnovit" onclick="loadDepartures('${stopId}', '${stopName.replace(/'/g, "\\'")}')">⟳</button>
+      </div>
+    </div>
+
+    <div class="refresh-bar-wrap">
+      <span class="refresh-bar-label">⟳ Auto-obnovení za <span id="refreshCountdownDisplay">${refreshInterval}</span>s</span>
+      <div class="refresh-progress"><div class="refresh-progress-fill" id="refreshFill" style="width:100%"></div></div>
+      <span class="refresh-bar-label" style="color:var(--text3);">${new Date().toLocaleTimeString('cs-CZ')}</span>
+    </div>
+
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterDepartures('all', this)">🔢 Vše (${departures.length})</button>
+      ${buildTypeTabs(departures)}
+    </div>
+
+    ${departures.length === 0 ?
+      `<div class="state-box"><div class="state-icon">😴</div><div class="state-title">Žádné odjezdy</div><div class="state-desc">V blízké době nejsou plánovány žádné odjezdy z této zastávky.</div></div>` :
+      `<table class="departures-table" id="depTable">
+        <thead>
+          <tr>
+            <th>Linka</th>
+            <th>Směr</th>
+            <th>Odjezd</th>
+            ${timeMode !== 'time' ? '<th>Za</th>' : ''}
+            <th>Zpoždění</th>
+            <th>Nástupište</th>
+          </tr>
+        </thead>
+        <tbody id="depBody">
+          ${departures.map((dep, i) => renderDepRow(dep, i, timeMode)).join('')}
+        </tbody>
+      </table>`
+    }
+  `;
+
+  document.getElementById('boardContainer').innerHTML = boardHtml;
+  document.getElementById('boardContainer').dataset.departures = JSON.stringify(departures);
+  document.getElementById('boardContainer').dataset.stopId = stopId;
+  document.getElementById('boardContainer').dataset.stopName = stopName;
+}
+
+function buildTypeTabs(departures) {
+  const types = {};
+  departures.forEach(d => {
+    const t = getRouteType(d.route?.type, d.route?.short_name);
+    types[t] = (types[t] || 0) + 1;
+  });
+  return Object.entries(types).map(([t, count]) => {
+    const icon = typeIcon(t);
+    return `<button class="filter-tab" onclick="filterDepartures('${t}', this)">${icon} ${t} (${count})</button>`;
+  }).join('');
+}
+
+function renderDepRow(dep, index, timeMode) {
+  const route = dep.route || {};
+  const trip = dep.trip || {};
+  const arrival = dep.arrival_timestamp || dep.departure_timestamp || {};
+  const depart = dep.departure_timestamp || {};
+
+  const shortName = route.short_name || '?';
+  const headsign = trip.headsign || dep.headsign || '—';
+  const type = getRouteType(route.type, shortName);
+  const typeClass = getRouteClass(type, shortName);
+  const icon = typeIcon(type);
+
+  const scheduledTime = depart.scheduled || arrival.scheduled;
+  const predictedTime = depart.predicted || arrival.predicted;
+  const displayTime = predictedTime || scheduledTime;
+
+  const timeStr = displayTime ? new Date(displayTime).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+
+  let minsHtml = '';
+  let minsVal = 999;
+  if (displayTime) {
+    const diff = Math.round((new Date(displayTime) - new Date()) / 60000);
+    minsVal = diff;
+    if (diff <= 0) {
+      minsHtml = `<span class="dep-time-mins now">NYNÍ</span>`;
+    } else if (diff <= 2) {
+      minsHtml = `<span class="dep-time-mins soon">${diff}'</span>`;
+    } else if (diff <= 5) {
+      minsHtml = `<span class="dep-time-mins near">${diff}'</span>`;
+    } else {
+      minsHtml = `<span class="dep-time-mins ok">${diff}'</span>`;
+    }
+  }
+
+  const delay = dep.delay != null ? dep.delay : (depart.delay != null ? depart.delay : null);
+  let delayHtml = '';
+  if (delay !== null && delay !== undefined) {
+    const delayMins = Math.round(delay / 60);
+    if (delayMins > 1) {
+      delayHtml = `<span class="dep-delay late">+${delayMins}min</span>`;
+    } else if (delayMins < -1) {
+      delayHtml = `<span class="dep-delay early">${delayMins}min</span>`;
+    } else {
+      delayHtml = `<span class="dep-delay on-time">±0</span>`;
+    }
+  } else {
+    delayHtml = `<span class="dep-delay on-time" style="opacity:0.4">—</span>`;
+  }
+
+  const platform = dep.stop?.platform_code || dep.stop?.stop_name || '';
+  const ac = dep.vehicle_registration?.air_conditioned;
+  const acIcon = getSetting('showAC', true) && ac ? ' ❄️' : '';
+
+  const depType = type.toLowerCase();
+  const style = `animation-delay: ${index * 40}ms`;
+
+  let timeCell = '';
+  if (timeMode === 'minutes') timeCell = minsHtml;
+  else if (timeMode === 'time') timeCell = `<span class="dep-time">${timeStr}</span>`;
+  else timeCell = `<span class="dep-time">${timeStr}</span> ${minsHtml}`;
+
+  return `<tr class="dep-row" data-type="${depType}" style="${style}">
+    <td><span class="route-badge ${typeClass}">${shortName}</span></td>
+    <td class="dep-headsign">${headsign}${acIcon}</td>
+    <td><span class="dep-time">${timeStr}</span></td>
+    ${timeMode !== 'time' ? `<td>${minsHtml}</td>` : ''}
+    <td>${delayHtml}</td>
+    <td class="dep-platform">${platform}</td>
+  </tr>`;
+}
+
+function filterDepartures(type, btn) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('.dep-row').forEach(row => {
+    if (type === 'all' || row.dataset.type === type.toLowerCase()) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+function getRouteType(typeNum, shortName) {
+  if (typeNum === 1 || typeNum === 401) return 'Metro';
+  if (typeNum === 0 || typeNum === 900) return 'Tramvaj';
+  if (typeNum === 2 || typeNum === 100) return 'Vlak';
+  if (typeNum === 4) return 'Přívoz';
+  const name = (shortName || '').toString();
+  if (['A','B','C'].includes(name)) return 'Metro';
+  if (/^[PNX]\d/.test(name)) return 'Noční bus';
+  return 'Bus';
+}
+
+function getRouteClass(type, shortName) {
+  if (type === 'Metro') {
+    const n = (shortName || '').toUpperCase();
+    if (n === 'A') return 'route-metro-a';
+    if (n === 'B') return 'route-metro-b';
+    if (n === 'C') return 'route-metro-c';
+    return 'route-metro-b';
+  }
+  if (type === 'Tramvaj') return 'route-tram';
+  if (type === 'Vlak') return 'route-train';
+  if (type === 'Přívoz') return 'route-ferry';
+  if (type === 'Noční bus') return 'route-night';
+  return 'route-bus';
+}
+
+function typeIcon(type) {
+  const icons = { 'Metro': '🚇', 'Tramvaj': '🚃', 'Vlak': '🚂', 'Přívoz': '⛴', 'Noční bus': '🌙', 'Bus': '🚌' };
+  return icons[type] || '🚌';
+}
+
+function showBoardLoading(name) {
+  document.getElementById('boardContainer').innerHTML = `
+    <div class="board-header">
+      <div>
+        <div class="board-title">📍 ${name}</div>
+        <div class="board-sub">Načítání odjezdů…</div>
+      </div>
+    </div>
+    <div class="state-box">
+      <div class="spinner"></div>
+      <div class="state-title">Načítám data…</div>
+      <div class="state-desc">Kontaktuji Golemio API…</div>
+    </div>`;
+}
+
+function showBoardError(name) {
+  document.getElementById('boardContainer').innerHTML = `
+    <div class="state-box">
+      <div class="state-icon">⚠️</div>
+      <div class="state-title">Chyba při načítání</div>
+      <div class="state-desc">Zkontrolujte API klíč a zkuste to znovu.</div>
+    </div>`;
+}
+
+// ============================
+// AUTO REFRESH
+// ============================
+function startAutoRefresh(stopId, stopName) {
+  clearAutoRefresh();
+  if (refreshInterval === 0) return;
+  refreshCountdown = refreshInterval;
+  updateRefreshUI();
+
+  refreshTimer = setInterval(() => {
+    refreshCountdown--;
+    updateRefreshUI();
+    if (refreshCountdown <= 0) {
+      loadDepartures(stopId, stopName);
+    }
+  }, 1000);
+}
+
+function clearAutoRefresh() {
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+}
+
+function updateRefreshUI() {
+  const display = document.getElementById('refreshCountdownDisplay');
+  const fill = document.getElementById('refreshFill');
+  if (display) display.textContent = refreshCountdown;
+  if (fill) {
+    const pct = (refreshCountdown / refreshInterval) * 100;
+    fill.style.width = pct + '%';
+  }
+}
+
+function updateRefreshInterval() {
+  refreshInterval = parseInt(document.getElementById('refreshInterval').value);
+  localStorage.setItem('pid_refresh_interval', refreshInterval);
+  if (currentStop) {
+    startAutoRefresh(currentStop, currentStopName);
+  }
+}
+
+// ============================
+// VEHICLES
+// ============================
+async function loadVehicles() {
+  if (!apiKey) {
+    showError('Nejprve zadejte API klíč.', 'vehicleError');
+    return;
+  }
+  hideError('vehicleError');
+
+  document.getElementById('vehicleContainer').innerHTML = `
+    <div class="state-box"><div class="spinner"></div><div class="state-title">Načítám vozidla…</div></div>`;
+
+  try {
+    const res = await fetch(`${GOLEMIO}/vehiclepositions?limit=50`, {
+      headers: { 'X-Access-Token': apiKey }
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    allVehicles = (data.features || []);
+    renderVehicles(allVehicles);
+  } catch (e) {
+    showError('Chyba při načítání vozidel: ' + e.message, 'vehicleError');
+    document.getElementById('vehicleContainer').innerHTML = `
+      <div class="state-box"><div class="state-icon">⚠️</div><div class="state-title">Chyba</div></div>`;
+  }
+}
+
+function filterVehicles() {
+  const q = document.getElementById('vehicleSearch').value.trim().toUpperCase();
+  if (!q) { renderVehicles(allVehicles); return; }
+  const filtered = allVehicles.filter(v => {
+    const props = v.properties || {};
+    const route = (props.route?.short_name || '').toUpperCase();
+    return route.includes(q);
+  });
+  renderVehicles(filtered);
+}
+
+function renderVehicles(vehicles) {
+  if (!vehicles.length) {
+    document.getElementById('vehicleContainer').innerHTML = `
+      <div class="state-box"><div class="state-icon">🚌</div><div class="state-title">Žádná vozidla</div><div class="state-desc">Nebyla nalezena žádná vozidla odpovídající filtru.</div></div>`;
+    return;
+  }
+
+  const cards = vehicles.map((v, i) => {
+    const p = v.properties || {};
+    const route = p.route || {};
+    const trip = p.trip || {};
+    const shortName = route.short_name || '?';
+    const type = getRouteType(route.type, shortName);
+    const typeClass = getRouteClass(type, shortName);
+    const icon = typeIcon(type);
+
+    const delay = p.delay != null ? Math.round(p.delay / 60) : null;
+    const delayClass = delay == null ? '' : delay > 1 ? 'late' : delay < -1 ? 'early' : 'on-time';
+    const delayText = delay == null ? '—' : delay > 0 ? `+${delay} min` : delay < 0 ? `${delay} min` : '±0 min';
+
+    const heading = trip.headsign || '—';
+    const speed = p.speed != null ? Math.round(p.speed) : null;
+    const ac = p.vehicle_registration?.air_conditioned;
+    const bearing = p.bearing != null ? p.bearing : null;
+    const bearingArrow = bearing != null ? `<span style="display:inline-block;transform:rotate(${bearing}deg)">↑</span>` : '';
+
+    return `<div class="vehicle-card" style="animation-delay:${i * 30}ms">
+      <div class="vc-header">
+        <div class="vc-route">
+          <span class="route-badge ${typeClass}">${icon} ${shortName}</span>
+          <div class="vc-heading" title="${heading}">${heading}</div>
+        </div>
+        <div class="vc-status-dot"></div>
+      </div>
+      <div class="vc-meta">
+        <div class="vc-meta-item">
+          <div class="vc-meta-label">Zpoždění</div>
+          <div class="vc-meta-value ${delayClass}">${delayText}</div>
+        </div>
+        <div class="vc-meta-item">
+          <div class="vc-meta-label">Rychlost</div>
+          <div class="vc-meta-value">${speed != null ? speed + ' km/h' : '—'}</div>
+        </div>
+        <div class="vc-meta-item">
+          <div class="vc-meta-label">Směr ${bearingArrow}</div>
+          <div class="vc-meta-value">${bearing != null ? bearing + '°' : '—'}</div>
+        </div>
+        <div class="vc-meta-item">
+          <div class="vc-meta-label">Klima</div>
+          <div class="vc-meta-value">${ac ? '❄️ Ano' : ac === false ? '✗ Ne' : '—'}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('vehicleContainer').innerHTML = `
+    <div style="margin-bottom:12px; font-size:12px; font-family:var(--font-mono); color:var(--text3);">
+      Zobrazeno ${vehicles.length} vozidel · Aktualizováno ${new Date().toLocaleTimeString('cs-CZ')}
+    </div>
+    <div class="vehicle-grid">${cards}</div>`;
+}
+
+// ============================
+// SAVED STOPS
+// ============================
+function toggleSaveStop(id, name) {
+  const idx = savedStops.findIndex(s => s.id === id);
+  if (idx >= 0) {
+    savedStops.splice(idx, 1);
+    document.getElementById('saveStopBtn').textContent = '☆';
+  } else {
+    savedStops.push({ id, name });
+    document.getElementById('saveStopBtn').textContent = '⭐';
+  }
+  localStorage.setItem('pid_saved_stops', JSON.stringify(savedStops));
+  renderSavedStops();
+}
+
+function renderSavedStops() {
+  const el = document.getElementById('savedStopsList');
+  if (!savedStops.length) {
+    el.innerHTML = '<div class="empty-state">Žádné uložené zastávky</div>';
+    return;
+  }
+  el.innerHTML = savedStops.map(s =>
+    `<div class="saved-stop ${currentStop === s.id ? 'active' : ''}" onclick="loadDepartures('${s.id}', '${s.name.replace(/'/g, "\\'")}')">
+      <div>
+        <div class="saved-stop-name">🚏 ${s.name}</div>
+        <div class="saved-stop-id">${s.id}</div>
+      </div>
+      <button class="saved-stop-remove" onclick="event.stopPropagation(); removeSavedStop('${s.id}')" title="Odebrat">✕</button>
+    </div>`
+  ).join('');
+}
+
+function removeSavedStop(id) {
+  savedStops = savedStops.filter(s => s.id !== id);
+  localStorage.setItem('pid_saved_stops', JSON.stringify(savedStops));
+  renderSavedStops();
+}
+
+function clearSavedStops() {
+  savedStops = [];
+  localStorage.removeItem('pid_saved_stops');
+  renderSavedStops();
+}
+
+// ============================
+// SETTINGS
+// ============================
+function loadSettings() {
+  const ri = document.getElementById('refreshInterval');
+  const dl = document.getElementById('departureLimit');
+  const td = document.getElementById('timeDisplay');
+  if (ri) ri.value = getSetting('refreshInterval', 30);
+  if (dl) dl.value = getSetting('departureLimit', 10);
+  if (td) td.value = getSetting('timeDisplay', 'minutes');
+
+  const skipToggle = document.getElementById('toggleSkipAtStop');
+  const acToggle = document.getElementById('toggleShowAC');
+  if (skipToggle) skipToggle.className = 'toggle ' + (getSetting('skipAtStop', true) ? 'on' : '');
+  if (acToggle) acToggle.className = 'toggle ' + (getSetting('showAC', true) ? 'on' : '');
+}
+
+function getSetting(key, def) {
+  return settings[key] != null ? settings[key] : def;
+}
+
+function saveSetting(key, value) {
+  settings[key] = value;
+  localStorage.setItem('pid_settings', JSON.stringify(settings));
+}
+
+function toggleSetting(key, el) {
+  const val = !el.classList.contains('on');
+  el.className = 'toggle ' + (val ? 'on' : '');
+  saveSetting(key, val);
+}
+
+// ============================
+// UTILS
+// ============================
+function showError(msg, id) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = '⚠️ ' + msg; el.style.display = 'block'; }
+}
+
+function hideError(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+</script>
+</body>
+</html>
