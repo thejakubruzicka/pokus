@@ -5,832 +5,883 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PID Odjezdy — Pražská integrovaná doprava</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&display=swap" rel="stylesheet">
 <style>
+/* ══════════════════════════════════════
+   THEMES
+══════════════════════════════════════ */
 :root {
-  --bg:#0a0c10;--bg2:#111318;--bg3:#1a1d24;--border:#252932;
-  --text:#e8eaf0;--text2:#8a8f9e;--text3:#545966;
-  --accent:#f5c842;--accent2:#ff6b35;--accent3:#4ea8ff;
-  --green:#44d986;--red:#ff4f4f;--orange:#ff9f40;
-  --metro-a:#00a562;--metro-b:#f5c842;--metro-c:#c8102e;
-  --radius:10px;--font-mono:'Space Mono',monospace;--font-sans:'DM Sans',sans-serif;--tr:.2s ease;
+  --bg:#0a0c10; --bg2:#111318; --bg3:#1a1d24; --border:#252932;
+  --text:#e8eaf0; --text2:#8a8f9e; --text3:#545966;
+  --accent:#f5c842; --accent2:#ff6b35; --accent3:#4ea8ff;
+  --green:#44d986; --red:#ff4f4f; --orange:#ff9f40;
+  --ma:#00a562; --mb:#f5c842; --mc:#c8102e;
+  --R:10px; --M:'Space Mono',monospace; --S:'DM Sans',sans-serif; --T:.18s ease;
 }
-[data-theme="light"]{--bg:#f4f1eb;--bg2:#fff;--bg3:#ece9e0;--border:#d8d3c8;--text:#1a1a1a;--text2:#5a5a6a;--text3:#9a9aaa;--accent:#d4a000;--accent2:#e05020;--accent3:#0060cc}
-[data-theme="tram"]{--bg:#0d1a0f;--bg2:#112014;--bg3:#162b1a;--border:#1e3524;--text:#d6f5dc;--text2:#6db87a;--text3:#3a6644;--accent:#44d986;--accent2:#a8ff78;--accent3:#78ffd6}
-[data-theme="metro"]{--bg:#04060f;--bg2:#080c1e;--bg3:#0d1330;--border:#151e40;--text:#c8d8ff;--text2:#6878aa;--text3:#384060;--accent:#4ea8ff;--accent2:#a060ff;--accent3:#ff60a0}
-[data-theme="terminal"]{--bg:#000;--bg2:#050505;--bg3:#0a0a0a;--border:#1a1a1a;--text:#00ff41;--text2:#007a1e;--text3:#004010;--accent:#00ff41;--accent2:#00cc33;--accent3:#00aa28}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;transition:background var(--tr),color var(--tr)}
-.layout{display:grid;grid-template-columns:260px 1fr;grid-template-rows:auto 1fr;min-height:100vh}
-header{grid-column:1/-1;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.logo{display:flex;align-items:center;gap:12px}
-.logo-icon{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:14px;color:#000;flex-shrink:0}
-.logo-text{font-family:var(--font-mono);font-weight:700;font-size:15px;letter-spacing:.02em}
-.logo-sub{font-size:10px;color:var(--text3);font-family:var(--font-mono);letter-spacing:.08em;text-transform:uppercase}
-.header-right{display:flex;align-items:center;gap:12px}
-.live-badge{display:flex;align-items:center;gap:6px;background:rgba(68,217,134,.1);border:1px solid rgba(68,217,134,.25);border-radius:20px;padding:4px 10px;font-size:11px;font-family:var(--font-mono);color:var(--green)}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-.clock{font-family:var(--font-mono);font-size:14px;color:var(--text2)}
-.theme-picker{display:flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px}
-.theme-btn{width:22px;height:22px;border-radius:5px;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s;position:relative}
-.theme-btn:hover{transform:scale(1.2)}.theme-btn.active{border-color:var(--accent)}
-.theme-btn[data-theme="dark"]{background:#111318}.theme-btn[data-theme="light"]{background:#f4f1eb}
-.theme-btn[data-theme="tram"]{background:#112014}.theme-btn[data-theme="metro"]{background:#080c1e}.theme-btn[data-theme="terminal"]{background:#000}
-.theme-btn-label{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:10px;font-family:var(--font-mono);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}
-.theme-btn:hover .theme-btn-label{opacity:1}
-.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:20px 0}
-.nav-section{padding:0 16px;margin-bottom:24px}
-.nav-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-family:var(--font-mono);padding:0 8px;margin-bottom:8px}
-.nav-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font-sans);font-size:14px;font-weight:500;transition:background var(--tr),color var(--tr);text-align:left;margin-bottom:2px}
-.nav-btn:hover{background:var(--bg3);color:var(--text)}.nav-btn.active{background:rgba(245,200,66,.1);color:var(--accent)}
-.nav-btn .ni{font-size:16px;width:20px;text-align:center}
-.api-section{padding:0 16px;margin-bottom:24px}
-.api-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-family:var(--font-mono);margin-bottom:8px;padding:0 8px}
-.api-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:var(--font-mono);font-size:11px;outline:none;transition:border-color var(--tr)}
-.api-input:focus{border-color:var(--accent)}.api-input::placeholder{color:var(--text3)}
-.api-save-btn{width:100%;margin-top:6px;padding:7px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:var(--font-mono);font-size:11px;font-weight:700;cursor:pointer;transition:opacity var(--tr)}
-.api-save-btn:hover{opacity:.85}
-.api-status{font-size:10px;font-family:var(--font-mono);margin-top:5px;padding:0 2px}
-.api-status.ok{color:var(--green)}.api-status.err{color:var(--red)}
-.saved-stop{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;cursor:pointer;transition:background var(--tr);margin-bottom:2px}
-.saved-stop:hover{background:var(--bg3)}.saved-stop.active{background:rgba(245,200,66,.08)}
-.saved-stop-name{font-size:13px;font-weight:500;color:var(--text)}
-.saved-stop-id{font-size:10px;font-family:var(--font-mono);color:var(--text3)}
-.saved-stop-remove{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 4px;border-radius:4px;transition:color var(--tr),background var(--tr)}
-.saved-stop-remove:hover{color:var(--red);background:rgba(255,79,79,.08)}
-.empty-state{padding:8px 12px;font-size:12px;color:var(--text3);font-style:italic}
-.main{overflow-y:auto;padding:24px;background:var(--bg)}
-.page{display:none}.page.active{display:block}
-.quick-picks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
-.qp-label{font-size:11px;font-family:var(--font-mono);color:var(--text3)}
-.qp-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;font-family:var(--font-mono);cursor:pointer;transition:all var(--tr)}
-.qp-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(245,200,66,.06)}
-.search-bar{display:flex;gap:10px;margin-bottom:16px}
-.search-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text);font-family:var(--font-sans);font-size:14px;outline:none;transition:border-color var(--tr)}
-.search-input:focus{border-color:var(--accent)}.search-input::placeholder{color:var(--text3)}
-.search-btn{padding:12px 20px;background:var(--accent);color:#000;border:none;border-radius:var(--radius);font-family:var(--font-mono);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:opacity var(--tr),transform .1s;white-space:nowrap}
-.search-btn:hover{opacity:.85}.search-btn:active{transform:scale(.97)}
-.search-results{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;display:none}
-.search-result-item{padding:11px 16px;cursor:pointer;transition:background var(--tr);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
-.search-result-item:last-child{border-bottom:none}.search-result-item:hover{background:var(--bg3)}
-.result-name{font-size:14px;font-weight:500}.result-meta{font-size:11px;font-family:var(--font-mono);color:var(--text3)}
-.board-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
-.board-title{font-family:var(--font-mono);font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
-.board-sub{font-size:12px;color:var(--text3);font-family:var(--font-mono);margin-top:4px}
-.board-actions{display:flex;gap:8px}
-.icon-btn{width:36px;height:36px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text2);transition:background var(--tr),color var(--tr),border-color var(--tr)}
-.icon-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--accent)}
-.filter-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
-.filter-tab{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;font-family:var(--font-mono);cursor:pointer;transition:all var(--tr)}
-.filter-tab:hover{border-color:var(--accent);color:var(--text)}.filter-tab.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
-.departures-table{width:100%;border-collapse:collapse;font-size:14px}
-.departures-table thead tr{border-bottom:1px solid var(--border)}
-.departures-table th{text-align:left;padding:8px 12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-family:var(--font-mono);font-weight:400}
-.dep-row{border-bottom:1px solid var(--border);transition:background var(--tr);animation:slideIn .3s ease forwards;opacity:0}
-.dep-row:hover{background:var(--bg2)}
-@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.dep-row td{padding:11px 12px;vertical-align:middle}
-.route-badge{display:inline-flex;align-items:center;justify-content:center;min-width:40px;padding:3px 8px;border-radius:6px;font-family:var(--font-mono);font-weight:700;font-size:13px}
-.rb-bus{background:rgba(78,168,255,.15);color:var(--accent3)}
-.rb-tram{background:rgba(255,107,53,.15);color:var(--accent2)}
-.rb-ma{background:rgba(0,165,98,.2);color:var(--metro-a)}
-.rb-mb{background:rgba(245,200,66,.2);color:var(--metro-b)}
-.rb-mc{background:rgba(200,16,46,.2);color:var(--metro-c)}
-.rb-night{background:rgba(138,143,158,.15);color:var(--text2)}
-.rb-train{background:rgba(180,100,255,.15);color:#b464ff}
-.rb-ferry{background:rgba(0,200,255,.15);color:#00c8ff}
-.dep-time{font-family:var(--font-mono);font-size:14px;font-weight:700}
-.dtm{display:inline-block;font-family:var(--font-mono);font-weight:700;font-size:13px;padding:3px 8px;border-radius:5px}
-.dtm.soon{background:rgba(255,79,79,.15);color:var(--red)}
-.dtm.near{background:rgba(255,159,64,.15);color:var(--orange)}
-.dtm.ok{background:rgba(68,217,134,.12);color:var(--green)}
-.dtm.now{background:var(--accent);color:#000;animation:fn 1s ease infinite}
-@keyframes fn{0%,100%{opacity:1}50%{opacity:.6}}
-.dep-headsign{font-weight:500}
-.dep-delay{font-size:11px;font-family:var(--font-mono)}
-.dep-delay.late{color:var(--red)}.dep-delay.early{color:var(--green)}.dep-delay.ot{color:var(--green)}
-.dep-platform{font-size:11px;font-family:var(--font-mono);color:var(--text3)}
-.state-box{padding:60px 24px;text-align:center;color:var(--text3)}
-.state-icon{font-size:48px;margin-bottom:16px;opacity:.5}
-.state-title{font-size:18px;font-family:var(--font-mono);color:var(--text2);margin-bottom:8px}
-.state-desc{font-size:13px;line-height:1.7;max-width:420px;margin:0 auto}
-.state-desc a{color:var(--accent3)}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+[data-theme="light"]{--bg:#f0ede6;--bg2:#fff;--bg3:#e8e4db;--border:#d5cfc4;--text:#1a1a1a;--text2:#5a5a6a;--text3:#9a9aaa;--accent:#c89a00;--accent2:#d44010;--accent3:#0055cc;}
+[data-theme="tram"]{--bg:#0c1a0e;--bg2:#112014;--bg3:#162b1a;--border:#1d3422;--text:#d0f5d8;--text2:#60b070;--text3:#386440;--accent:#44d986;--accent2:#90ff60;--accent3:#60ffd0;}
+[data-theme="metro"]{--bg:#04060f;--bg2:#070b1c;--bg3:#0c1230;--border:#13193e;--text:#bcd4ff;--text2:#5870a4;--text3:#303c60;--accent:#4ea8ff;--accent2:#9060ff;--accent3:#ff50a0;}
+[data-theme="terminal"]{--bg:#000;--bg2:#040404;--bg3:#080808;--border:#141414;--text:#00ff41;--text2:#007718;--text3:#003c0c;--accent:#00ff41;--accent2:#00cc33;--accent3:#009926;}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--S);min-height:100vh;transition:background var(--T),color var(--T);}
+
+/* ══════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════ */
+.layout{display:grid;grid-template-columns:268px 1fr;grid-template-rows:58px 1fr;min-height:100vh;}
+
+/* ── HEADER ── */
+header{
+  grid-column:1/-1;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 18px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;
+}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-badge{width:32px;height:32px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font:700 12px/1 var(--M);color:#000;flex-shrink:0;}
+.logo-name{font:700 13px/1 var(--M);}
+.logo-sub{font:400 9px/1 var(--M);color:var(--text3);letter-spacing:.07em;text-transform:uppercase;margin-top:3px;}
+.hdr-r{display:flex;align-items:center;gap:9px;}
+.live{display:flex;align-items:center;gap:5px;background:rgba(68,217,134,.1);border:1px solid rgba(68,217,134,.22);border-radius:20px;padding:3px 9px;font:400 10px/1 var(--M);color:var(--green);}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.4s ease infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#clock{font:400 13px/1 var(--M);color:var(--text2);}
+.themes{display:flex;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:3px;}
+.tb{width:19px;height:19px;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:transform .13s,border-color .13s;position:relative;}
+.tb:hover{transform:scale(1.3);}
+.tb.on{border-color:var(--accent);}
+.tb[data-t="dark"]{background:#111318;}
+.tb[data-t="light"]{background:#f0ede6;}
+.tb[data-t="tram"]{background:#112014;}
+.tb[data-t="metro"]{background:#070b1c;}
+.tb[data-t="terminal"]{background:#000;}
+.tbt{position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font:400 9px/1 var(--M);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;}
+.tb:hover .tbt{opacity:1;}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:6px;}
+.s-sec{padding:0 13px;margin-bottom:4px;}
+.s-lbl{font:400 9px/1 var(--M);letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:6px;display:block;}
+.nav-btn{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:none;background:transparent;color:var(--text2);cursor:pointer;font:500 13px/1 var(--S);transition:background var(--T),color var(--T);text-align:left;margin-bottom:1px;}
+.nav-btn:hover{background:var(--bg3);color:var(--text);}
+.nav-btn.active{background:rgba(245,200,66,.1);color:var(--accent);}
+.ni{font-size:14px;width:17px;text-align:center;}
+
+/* API KEY AREA */
+.api-area{padding:0 13px;margin-bottom:4px;}
+.api-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font:400 10px/1 var(--M);outline:none;transition:border-color var(--T);}
+.api-input:focus{border-color:var(--accent);}
+.api-input::placeholder{color:var(--text3);}
+.api-btn{width:100%;margin-top:4px;padding:6px;background:var(--accent);color:#000;border:none;border-radius:6px;font:700 10px/1 var(--M);cursor:pointer;letter-spacing:.04em;transition:opacity var(--T);}
+.api-btn:hover{opacity:.8;}
+.api-st{font:400 9px/1 var(--M);margin-top:4px;padding:0 2px;}
+.api-st.ok{color:var(--green);}
+.api-st.err{color:var(--red);}
+
+/* SAVED STOPS */
+.saved-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;cursor:pointer;transition:background var(--T);margin-bottom:1px;}
+.saved-item:hover{background:var(--bg3);}
+.saved-item.cur{background:rgba(245,200,66,.08);}
+.si-name{font:500 12px/1.2 var(--S);color:var(--text);}
+.si-id{font:400 9px/1 var(--M);color:var(--text3);margin-top:2px;}
+.si-rm{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:2px 3px;border-radius:3px;transition:color var(--T);}
+.si-rm:hover{color:var(--red);}
+.s-empty{padding:5px 10px;font:italic 11px/1 var(--S);color:var(--text3);}
+
+/* ── MAIN ── */
+.main{overflow-y:auto;padding:20px;background:var(--bg);}
+.page{display:none;animation:fadeIn .2s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* SEARCH BAR */
+.sbar{display:flex;gap:8px;margin-bottom:7px;}
+.sinput{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:10px 14px;color:var(--text);font:400 14px/1 var(--S);outline:none;transition:border-color var(--T);}
+.sinput:focus{border-color:var(--accent);}
+.sinput::placeholder{color:var(--text3);}
+.sbtn{padding:10px 16px;background:var(--accent);color:#000;border:none;border-radius:var(--R);font:700 12px/1 var(--M);cursor:pointer;transition:opacity var(--T),transform .1s;white-space:nowrap;letter-spacing:.03em;}
+.sbtn:hover{opacity:.82;}
+.sbtn:active{transform:scale(.96);}
+
+/* SEARCH RESULTS DROPDOWN */
+.sresults{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);overflow:hidden;margin-bottom:13px;display:none;max-height:260px;overflow-y:auto;}
+.sri{padding:9px 14px;cursor:pointer;transition:background var(--T);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.sri:last-child{border-bottom:none;}
+.sri:hover{background:var(--bg3);}
+.sri-name{font:500 13px/1 var(--S);}
+.sri-meta{font:400 10px/1 var(--M);color:var(--text3);margin-top:3px;}
+
+/* ERROR BOX */
+.errbox{background:rgba(255,79,79,.1);border:1px solid rgba(255,79,79,.28);border-radius:8px;padding:10px 13px;font:400 12px/1.4 var(--S);color:var(--red);margin-bottom:13px;display:none;}
+
+/* BOARD */
+.board-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:13px;}
+.board-title{font:700 19px/1.2 var(--M);letter-spacing:-.02em;}
+.board-sub{font:400 10px/1 var(--M);color:var(--text3);margin-top:4px;}
+.board-acts{display:flex;gap:6px;}
+.ic-btn{width:32px;height:32px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text2);transition:all var(--T);}
+.ic-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--accent);}
+
+/* REFRESH BAR */
+.rbar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:8px 12px;margin-bottom:13px;display:flex;align-items:center;gap:10px;}
+.rl{font:400 10px/1 var(--M);color:var(--text2);white-space:nowrap;}
+.rprog{flex:1;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
+.rfill{height:100%;background:var(--accent);border-radius:1px;transition:width 1s linear;}
+
+/* FILTER TABS */
+.ftabs{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap;}
+.ftab{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font:400 10px/1 var(--M);cursor:pointer;transition:all var(--T);}
+.ftab:hover{border-color:var(--accent);color:var(--text);}
+.ftab.on{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+
+/* DEPARTURE TABLE */
+.dtable{width:100%;border-collapse:collapse;font-size:13px;}
+.dtable thead tr{border-bottom:1px solid var(--border);}
+.dtable th{text-align:left;padding:6px 10px;font:400 9px/1 var(--M);letter-spacing:.1em;text-transform:uppercase;color:var(--text3);}
+.drow{border-bottom:1px solid var(--border);transition:background var(--T);animation:rowIn .28s ease forwards;opacity:0;}
+.drow:hover{background:var(--bg2);}
+@keyframes rowIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.drow td{padding:9px 10px;vertical-align:middle;}
+
+/* ROUTE BADGE */
+.rb{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:3px 6px;border-radius:5px;font:700 11px/1 var(--M);}
+.rb-bus{background:rgba(78,168,255,.14);color:var(--accent3);}
+.rb-tram{background:rgba(255,107,53,.14);color:var(--accent2);}
+.rb-ma{background:rgba(0,165,98,.18);color:var(--ma);}
+.rb-mb{background:rgba(245,200,66,.18);color:var(--mb);}
+.rb-mc{background:rgba(200,16,46,.18);color:var(--mc);}
+.rb-night{background:rgba(138,143,158,.14);color:var(--text2);}
+.rb-train{background:rgba(180,100,255,.14);color:#b464ff;}
+.rb-ferry{background:rgba(0,200,255,.14);color:#00c8ff;}
+
+/* MINUTES PILL */
+.mins{display:inline-block;font:700 11px/1 var(--M);padding:2px 6px;border-radius:4px;}
+.mins.now{background:var(--accent);color:#000;animation:fla 1s ease infinite;}
+.mins.soon{background:rgba(255,79,79,.14);color:var(--red);}
+.mins.near{background:rgba(255,159,64,.14);color:var(--orange);}
+.mins.ok{background:rgba(68,217,134,.11);color:var(--green);}
+@keyframes fla{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* DELAY */
+.dl{font:400 10px/1 var(--M);}
+.dl.late{color:var(--red);}
+.dl.early{color:var(--accent3);}
+.dl.ok{color:var(--green);}
+
+/* STATE BOX */
+.sbox{padding:52px 20px;text-align:center;color:var(--text3);}
+.sbox-icon{font-size:42px;margin-bottom:13px;opacity:.45;}
+.sbox-title{font:700 16px/1 var(--M);color:var(--text2);margin-bottom:7px;}
+.sbox-desc{font:400 12px/1.6 var(--S);max-width:360px;margin:0 auto;}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 13px;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.rbar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
-.rbar-label{font-size:11px;font-family:var(--font-mono);color:var(--text2);white-space:nowrap}
-.rbar-progress{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
-.rbar-fill{height:100%;background:var(--accent);transition:width 1s linear;border-radius:2px}
-.vehicle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:20px}
-.vehicle-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color var(--tr),transform .15s;animation:slideIn .3s ease forwards;opacity:0}
-.vehicle-card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.vc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
-.vc-heading{font-size:15px;font-weight:700;color:var(--text);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
-.vc-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite;margin-top:4px}
-.vc-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;font-family:var(--font-mono)}
-.vc-mi{background:var(--bg3);border-radius:6px;padding:6px 8px}
-.vc-ml{color:var(--text3);margin-bottom:2px}.vc-mv{color:var(--text);font-weight:700}
-.vc-mv.late{color:var(--red)}.vc-mv.early{color:var(--accent3)}.vc-mv.ot{color:var(--green)}
-.ac{max-width:700px}
-.ah{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:32px;margin-bottom:20px;position:relative;overflow:hidden}
-.ah::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(245,200,66,.08) 0%,transparent 70%);pointer-events:none}
-.ah-title{font-family:var(--font-mono);font-size:28px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px}
-.ah-title span{color:var(--accent)}
-.ah-desc{font-size:14px;line-height:1.7;color:var(--text2);max-width:500px}
-.as{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px}
-.as-title{font-family:var(--font-mono);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.as-title::after{content:'';flex:1;height:1px;background:var(--border)}
-.fl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fi{display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--bg3);border-radius:8px}
-.fi-icon{font-size:18px;margin-top:1px}
-.fi-text h4{font-size:13px;font-weight:700;margin-bottom:2px}.fi-text p{font-size:11px;color:var(--text2);line-height:1.4}
-.cl-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
-.cl-item:last-child{border-bottom:none}
-.cl-v{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;min-width:55px}
-.cl-d{font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-top:2px}
-.cl-e h4{font-size:13px;font-weight:700;margin-bottom:4px}
-.cl-e ul{padding-left:16px}.cl-e li{font-size:12px;color:var(--text2);margin-bottom:2px;line-height:1.5}
-.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-family:var(--font-mono);font-weight:700;letter-spacing:.05em;margin-right:4px}
-.tag-new{background:rgba(68,217,134,.15);color:var(--green)}.tag-fix{background:rgba(255,79,79,.15);color:var(--red)}.tag-imp{background:rgba(78,168,255,.15);color:var(--accent3)}
-.lbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-family:var(--font-mono);font-size:12px;color:var(--text2);text-decoration:none;transition:border-color var(--tr),color var(--tr)}
-.lbtn:hover{border-color:var(--accent);color:var(--accent)}
-.sg{display:grid;gap:12px}
-.sr{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg3);border-radius:8px}
-.sl h4{font-size:13px;font-weight:500}.sl p{font-size:11px;color:var(--text3);margin-top:2px}
-.toggle{width:40px;height:22px;background:var(--border);border-radius:11px;position:relative;cursor:pointer;transition:background var(--tr);flex-shrink:0}
-.toggle.on{background:var(--accent)}.toggle::after{content:'';position:absolute;width:18px;height:18px;background:white;border-radius:50%;top:2px;left:2px;transition:left var(--tr)}.toggle.on::after{left:20px}
-select.ss{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;cursor:pointer}
-.page-title{font-family:var(--font-mono);font-size:20px;font-weight:700;margin-bottom:6px;letter-spacing:-.02em}
-.page-subtitle{font-size:13px;color:var(--text3);margin-bottom:24px}
-.err{background:rgba(255,79,79,.1);border:1px solid rgba(255,79,79,.3);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:none;line-height:1.5;white-space:pre-line}
-.inf{background:rgba(78,168,255,.1);border:1px solid rgba(78,168,255,.25);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--accent3);margin-bottom:16px;line-height:1.5}
-.code-block{font-family:var(--font-mono);font-size:11px;color:var(--text2);background:var(--bg3);border-radius:8px;padding:14px;line-height:2}
-::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text3)}
-@media(max-width:768px){.layout{grid-template-columns:1fr;grid-template-rows:auto auto 1fr}.sidebar{border-right:none;border-bottom:1px solid var(--border);padding:12px 0;display:flex;overflow-x:auto}.nav-section{margin-bottom:0;display:flex;gap:4px}.nav-label,.api-section,.saved-stops-section{display:none}.nav-btn{width:auto;white-space:nowrap}.fl{grid-template-columns:1fr}.header-right .clock{display:none}}
+
+/* VEHICLES */
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:16px;}
+.vc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:14px;transition:border-color var(--T),transform .14s;animation:rowIn .28s ease forwards;opacity:0;}
+.vc:hover{border-color:var(--accent);transform:translateY(-2px);}
+.vc-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.vc-hs{font:700 13px/1.2 var(--S);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.vc-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s ease infinite;margin-top:5px;}
+.vm{display:grid;grid-template-columns:1fr 1fr;gap:6px;font:400 9px/1 var(--M);}
+.vmi{background:var(--bg3);border-radius:5px;padding:5px 6px;}
+.vml{color:var(--text3);margin-bottom:2px;}
+.vmv{color:var(--text);font-weight:700;}
+.vmv.late{color:var(--red);}
+.vmv.ok{color:var(--green);}
+.vmv.early{color:var(--accent3);}
+
+/* ABOUT / SETTINGS */
+.pg-title{font:700 18px/1 var(--M);margin-bottom:4px;letter-spacing:-.02em;}
+.pg-sub{font:400 12px/1 var(--S);color:var(--text3);margin-bottom:20px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:20px;margin-bottom:14px;}
+.card-title{font:400 10px/1 var(--M);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.feat{display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--bg3);border-radius:6px;}
+.feat-ico{font-size:16px;margin-top:1px;}
+.feat-t h4{font:700 11px/1 var(--S);margin-bottom:2px;}
+.feat-t p{font:400 10px/1.35 var(--S);color:var(--text2);}
+
+.cl-row{display:flex;gap:13px;padding:11px 0;border-bottom:1px solid var(--border);}
+.cl-row:last-child{border-bottom:none;}
+.cl-v{font:700 10px/1 var(--M);color:var(--accent);white-space:nowrap;min-width:40px;}
+.cl-d{font:400 9px/1 var(--M);color:var(--text3);margin-top:2px;}
+.cl-e h4{font:700 11px/1 var(--S);margin-bottom:3px;}
+.cl-e ul{padding-left:13px;}
+.cl-e li{font:400 10px/1.5 var(--S);color:var(--text2);margin-bottom:1px;}
+.tag{display:inline-block;padding:1px 5px;border-radius:3px;font:700 8px/1 var(--M);margin-right:3px;letter-spacing:.04em;}
+.tg-new{background:rgba(68,217,134,.14);color:var(--green);}
+.tg-fix{background:rgba(255,79,79,.14);color:var(--red);}
+.tg-imp{background:rgba(78,168,255,.14);color:var(--accent3);}
+
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg3);border-radius:6px;margin-bottom:7px;flex-wrap:wrap;gap:7px;}
+.set-row:last-child{margin-bottom:0;}
+.sl h4{font:500 12px/1 var(--S);}
+.sl p{font:400 9px/1 var(--S);color:var(--text3);margin-top:2px;}
+.tog{width:36px;height:18px;background:var(--border);border-radius:9px;position:relative;cursor:pointer;transition:background var(--T);flex-shrink:0;}
+.tog.on{background:var(--accent);}
+.tog::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left var(--T);}
+.tog.on::after{left:20px;}
+.ss{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px 6px;color:var(--text);font:400 10px/1 var(--M);outline:none;cursor:pointer;}
+
+.about-hero{background:var(--bg2);border:1px solid var(--border);border-radius:var(--R);padding:26px;margin-bottom:14px;position:relative;overflow:hidden;}
+.about-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(245,200,66,.06) 0%,transparent 70%);pointer-events:none;}
+.ah-title{font:700 24px/1.1 var(--M);letter-spacing:-.03em;margin-bottom:7px;}
+.ah-title span{color:var(--accent);}
+.ah-desc{font:400 13px/1.7 var(--S);color:var(--text2);}
+.ah-links{margin-top:16px;display:flex;gap:6px;flex-wrap:wrap;}
+.alink{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font:400 10px/1 var(--M);color:var(--text2);text-decoration:none;transition:border-color var(--T),color var(--T);}
+.alink:hover{border-color:var(--accent);color:var(--accent);}
+
+.author-badge{display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-top:14px;}
+.author-av{width:32px;height:32px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 13px/1 var(--M);color:#000;flex-shrink:0;}
+.author-name{font:700 12px/1 var(--S);margin-bottom:2px;}
+.author-gh{font:400 10px/1 var(--M);color:var(--text3);}
+.author-gh a{color:var(--accent3);text-decoration:none;}
+.author-gh a:hover{text-decoration:underline;}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:var(--text3);}
+
+@media(max-width:700px){
+  .layout{grid-template-columns:1fr;grid-template-rows:58px auto 1fr;}
+  .sidebar{flex-direction:row;border-right:none;border-bottom:1px solid var(--border);padding:8px 0;overflow-x:auto;gap:0;}
+  .s-sec{margin-bottom:0;}
+  .s-lbl,.api-area,.saved-sect{display:none;}
+  .nav-btn{width:auto;white-space:nowrap;}
+  .feat-grid{grid-template-columns:1fr;}
+  #clock{display:none;}
+}
 </style>
 </head>
 <body data-theme="dark">
 <div class="layout">
 
-<!-- HEADER -->
+<!-- ═══════════ HEADER ═══════════ -->
 <header>
   <div class="logo">
-    <div class="logo-icon">PID</div>
+    <div class="logo-badge">PID</div>
     <div>
-      <div class="logo-text">Odjezdová tabule</div>
+      <div class="logo-name">Odjezdová tabule</div>
       <div class="logo-sub">CIS · Golemio API v2</div>
     </div>
   </div>
-  <div class="header-right">
-    <div class="live-badge"><div class="live-dot"></div><span>ŽIVĚ</span></div>
-    <div class="clock" id="clock">--:--:--</div>
-    <div class="theme-picker">
-      <button class="theme-btn active" data-theme="dark" onclick="setTheme('dark')"><span class="theme-btn-label">Noční</span></button>
-      <button class="theme-btn" data-theme="light" onclick="setTheme('light')"><span class="theme-btn-label">Denní</span></button>
-      <button class="theme-btn" data-theme="tram" onclick="setTheme('tram')"><span class="theme-btn-label">Tramvaj</span></button>
-      <button class="theme-btn" data-theme="metro" onclick="setTheme('metro')"><span class="theme-btn-label">Metro</span></button>
-      <button class="theme-btn" data-theme="terminal" onclick="setTheme('terminal')"><span class="theme-btn-label">Terminál</span></button>
+  <div class="hdr-r">
+    <div class="live"><div class="live-dot"></div>ŽIVĚ</div>
+    <div id="clock">--:--:--</div>
+    <div class="themes">
+      <button class="tb on" data-t="dark"  onclick="setTheme('dark')"><span class="tbt">Noční</span></button>
+      <button class="tb"    data-t="light" onclick="setTheme('light')"><span class="tbt">Denní</span></button>
+      <button class="tb"    data-t="tram"  onclick="setTheme('tram')"><span class="tbt">Tramvaj</span></button>
+      <button class="tb"    data-t="metro" onclick="setTheme('metro')"><span class="tbt">Metro</span></button>
+      <button class="tb"    data-t="terminal" onclick="setTheme('terminal')"><span class="tbt">Terminál</span></button>
     </div>
   </div>
 </header>
 
-<!-- SIDEBAR -->
+<!-- ═══════════ SIDEBAR ═══════════ -->
 <aside class="sidebar">
-  <div class="nav-section">
-    <div class="nav-label">Navigace</div>
-    <button class="nav-btn active" onclick="showPage('departures')"><span class="ni">🚏</span> Odjezdy</button>
-    <button class="nav-btn" onclick="showPage('vehicles')"><span class="ni">🚌</span> Vozidla</button>
-    <button class="nav-btn" onclick="showPage('settings')"><span class="ni">⚙️</span> Nastavení</button>
-    <button class="nav-btn" onclick="showPage('about')"><span class="ni">ℹ️</span> O aplikaci</button>
+  <div class="s-sec">
+    <span class="s-lbl">Navigace</span>
+    <button class="nav-btn active" onclick="nav('departures',this)"><span class="ni">🚏</span> Odjezdy</button>
+    <button class="nav-btn" onclick="nav('vehicles',this)"><span class="ni">🚌</span> Vozidla</button>
+    <button class="nav-btn" onclick="nav('settings',this)"><span class="ni">⚙️</span> Nastavení</button>
+    <button class="nav-btn" onclick="nav('about',this)"><span class="ni">ℹ️</span> O aplikaci</button>
   </div>
-  <div class="api-section">
-    <div class="api-label">Golemio API klíč</div>
-    <input class="api-input" type="password" id="apiKeyInput" placeholder="Vložte API klíč…" autocomplete="off">
-    <button class="api-save-btn" onclick="saveApiKey()">💾 Uložit klíč</button>
-    <div class="api-status" id="apiStatus"></div>
-    <div style="margin-top:8px;font-size:10px;color:var(--text3);padding:0 2px;font-family:var(--font-mono);">
-      Bezplatná registrace:<br>
-      <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--accent3);text-decoration:none;">api.golemio.cz →</a>
-    </div>
+
+  <div class="api-area">
+    <span class="s-lbl" style="display:block">Golemio API klíč</span>
+    <input class="api-input" type="password" id="apiKey" placeholder="Vložte klíč…" autocomplete="off">
+    <button class="api-btn" onclick="saveKey()">💾 Uložit klíč</button>
+    <div class="api-st" id="keySt"></div>
+    <div style="margin-top:6px;font:400 9px/1.5 var(--M);color:var(--text3)">Klíč zdarma:<br><a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--accent3);text-decoration:none">api.golemio.cz →</a></div>
   </div>
-  <div class="nav-section" id="savedStopsSection">
-    <div class="nav-label">Uložené zastávky</div>
-    <div id="savedStopsList"></div>
+
+  <div class="s-sec saved-sect">
+    <span class="s-lbl">Oblíbené zastávky</span>
+    <div id="savedList"></div>
   </div>
 </aside>
 
-<!-- MAIN -->
+<!-- ═══════════ MAIN ═══════════ -->
 <main class="main">
 
-  <!-- DEPARTURES -->
-  <div class="page active" id="page-departures">
-    <div class="quick-picks">
-      <span class="qp-label">Rychlý výběr:</span>
-      <button class="qp-btn" onclick="loadDepartures('U539Z1P','Národní třída')">Národní třída</button>
-      <button class="qp-btn" onclick="loadDepartures('U118Z1P','Hlavní nádraží')">Hlavní nádraží</button>
-      <button class="qp-btn" onclick="loadDepartures('U953Z1P','Václavské nám.')">Václavské nám.</button>
-      <button class="qp-btn" onclick="loadDepartures('U100Z1P','Můstek')">Můstek</button>
-      <button class="qp-btn" onclick="loadDepartures('U307Z1P','Anděl')">Anděl</button>
-      <button class="qp-btn" onclick="loadDepartures('U5462Z1P','Letiště T1')">Letiště T1</button>
-    </div>
-    <div class="search-bar">
-      <input class="search-input" id="stopSearch" type="text"
-             placeholder="Hledat zastávku (např. Náměstí Míru, Florenc)…"
-             oninput="onStopInput()" onkeydown="if(event.key==='Enter')searchStops()">
-      <button class="search-btn" onclick="searchStops()">🔍 Hledat</button>
-    </div>
-    <div class="search-results" id="searchResults"></div>
-    <div class="err" id="errorBanner"></div>
-    <div id="boardContainer">
-      <div class="state-box">
-        <div class="state-icon">🚏</div>
-        <div class="state-title">Vyberte zastávku</div>
-        <div class="state-desc">
-          Klikněte na zastávku v rychlém výběru výše, nebo zadejte název do vyhledávacího pole.<br><br>
-          Pro živá data vložte váš Golemio API klíč do postranního panelu.<br>
-          <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank">Získat klíč zdarma →</a>
-        </div>
-      </div>
+<!-- ─── ODJEZDY ─── -->
+<div class="page active" id="page-departures">
+  <div class="sbar">
+    <input class="sinput" id="q" type="text"
+      placeholder="Hledat zastávku (např. Anděl, Náměstí Míru, Hlavní nádraží…)"
+      oninput="debSearch()" onkeydown="if(event.key==='Enter')doSearch()">
+    <button class="sbtn" onclick="doSearch()">🔍 Hledat</button>
+  </div>
+  <div class="sresults" id="sr"></div>
+  <div class="errbox" id="edep"></div>
+  <div id="board">
+    <div class="sbox">
+      <div class="sbox-icon">🚏</div>
+      <div class="sbox-title">Vyhledejte zastávku</div>
+      <div class="sbox-desc">Napište název zastávky a stiskněte Enter. API klíč je nutný — zadejte ho vlevo.</div>
     </div>
   </div>
-
-  <!-- VEHICLES -->
-  <div class="page" id="page-vehicles">
-    <div class="page-title">🚌 Vozidla v provozu</div>
-    <div class="page-subtitle">Aktuální polohy vozidel PID (vyžaduje API klíč)</div>
-    <div class="search-bar">
-      <input class="search-input" id="vehicleSearch" type="text"
-             placeholder="Filtrovat podle čísla linky (22, A, 178, S1)…"
-             oninput="filterVehicles()">
-      <button class="search-btn" onclick="loadVehicles()">⟳ Načíst vozidla</button>
-    </div>
-    <div class="err" id="vehicleError"></div>
-    <div id="vehicleContainer">
-      <div class="state-box">
-        <div class="state-icon">🗺️</div>
-        <div class="state-title">Načtěte vozidla</div>
-        <div class="state-desc">Stiskněte „Načíst vozidla" pro zobrazení aktuálních poloh.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS -->
-  <div class="page" id="page-settings">
-    <div class="page-title">⚙️ Nastavení</div>
-    <div class="page-subtitle">Přizpůsobte si zobrazení a chování aplikace</div>
-    <div class="as">
-      <div class="as-title">Odjezdová tabule</div>
-      <div class="sg">
-        <div class="sr"><div class="sl"><h4>Auto-obnovení</h4><p>Jak často se data obnoví</p></div>
-          <select class="ss" id="refreshInterval" onchange="updateRefreshInterval()">
-            <option value="20">20s</option><option value="30" selected>30s</option>
-            <option value="45">45s</option><option value="60">60s</option><option value="0">Vypnout</option>
-          </select></div>
-        <div class="sr"><div class="sl"><h4>Limit odjezdů</h4><p>Počet zobrazených řádků</p></div>
-          <select class="ss" id="departureLimit" onchange="saveSetting('departureLimit',this.value)">
-            <option value="5">5</option><option value="10" selected>10</option>
-            <option value="15">15</option><option value="20">20</option>
-          </select></div>
-        <div class="sr"><div class="sl"><h4>Přeskočit vozidla v zastávce</h4><p>Nezobrazovat vozidla právě stojící v zastávce</p></div>
-          <div class="toggle on" id="togSkip" onclick="toggleSetting('skipAtStop',this)"></div></div>
-        <div class="sr"><div class="sl"><h4>Klimatizace ❄️</h4><p>Zobrazit indikátor klimatizace</p></div>
-          <div class="toggle on" id="togAC" onclick="toggleSetting('showAC',this)"></div></div>
-        <div class="sr"><div class="sl"><h4>Zobrazení času</h4><p>Minuty zbývající / čas odjezdu / obojí</p></div>
-          <select class="ss" id="timeDisplay" onchange="saveSetting('timeDisplay',this.value)">
-            <option value="minutes" selected>Minuty</option>
-            <option value="time">Čas odjezdu</option>
-            <option value="both">Obojí</option>
-          </select></div>
-      </div>
-    </div>
-    <div class="as">
-      <div class="as-title">Barevné téma</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0">
-        <button onclick="setTheme('dark')" class="search-btn" style="padding:8px 14px;font-size:12px;">🌙 Noční</button>
-        <button onclick="setTheme('light')" class="search-btn" style="padding:8px 14px;font-size:12px;background:var(--bg3);color:var(--text);">☀️ Denní</button>
-        <button onclick="setTheme('tram')" class="search-btn" style="padding:8px 14px;font-size:12px;background:rgba(68,217,134,.2);color:var(--green);">🚃 Tramvaj</button>
-        <button onclick="setTheme('metro')" class="search-btn" style="padding:8px 14px;font-size:12px;background:rgba(78,168,255,.2);color:var(--accent3);">🚇 Metro</button>
-        <button onclick="setTheme('terminal')" class="search-btn" style="padding:8px 14px;font-size:12px;background:#000;color:#00ff41;">💻 Terminál</button>
-      </div>
-    </div>
-    <div class="as">
-      <div class="as-title">Správa dat</div>
-      <div class="sg">
-        <div class="sr"><div class="sl"><h4>Smazat oblíbené zastávky</h4><p>Odstraní všechny uložené zastávky</p></div>
-          <button onclick="clearSavedStops()" class="search-btn" style="padding:7px 14px;background:rgba(255,79,79,.15);color:var(--red);border:1px solid rgba(255,79,79,.3);">Smazat</button></div>
-        <div class="sr"><div class="sl"><h4>Smazat API klíč</h4><p>Odstraní klíč z localStorage prohlížeče</p></div>
-          <button onclick="clearApiKey()" class="search-btn" style="padding:7px 14px;background:rgba(255,79,79,.15);color:var(--red);border:1px solid rgba(255,79,79,.3);">Smazat</button></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ABOUT -->
-  <div class="page" id="page-about">
-    <div class="ac">
-      <div class="ah">
-        <div class="ah-title">PID <span>Odjezdová</span><br>Tabule</div>
-        <div class="ah-desc">
-          Neoficiální webová aplikace pro živé odjezdy Pražské integrované dopravy.
-          Data jsou poskytována přes <strong>Golemio API v2</strong> (Operátor ICT, a.s.)
-          a systém <strong>CIS</strong> — Celostátní informační systém o jízdních řádech.
-        </div>
-        <div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap;">
-          <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" class="lbtn">🔑 Získat API klíč</a>
-          <a href="https://api.golemio.cz/v2/pid/docs/openapi/" target="_blank" class="lbtn">📖 Dokumentace API</a>
-          <a href="https://pid.cz" target="_blank" class="lbtn">🚏 pid.cz</a>
-        </div>
-      </div>
-
-      <div class="as">
-        <div class="as-title">Jak začít</div>
-        <div style="font-size:13px;line-height:1.9;color:var(--text2);">
-          <strong style="color:var(--text)">1.</strong> Zaregistrujte se zdarma na <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--accent3)">api.golemio.cz</a> a ověřte e-mail.<br>
-          <strong style="color:var(--text)">2.</strong> Vygenerujte API klíč a vložte ho do postranního panelu → <em>Uložit klíč</em>.<br>
-          <strong style="color:var(--text)">3.</strong> Na stránce Odjezdy klikněte na tlačítko rychlého výběru nebo vyhledejte zastávku.<br>
-          <strong style="color:var(--text)">4.</strong> Kliknutím na ⭐ uložte zastávku do oblíbených pro rychlý přístup.<br>
-          <strong style="color:var(--text)">5.</strong> V Nastavení si přizpůsobte téma, interval obnovy a zobrazení.
-        </div>
-      </div>
-
-      <div class="as">
-        <div class="as-title">Použité API endpointy</div>
-        <div class="code-block">
-          <div><span style="color:var(--green)">GET</span> <span style="color:var(--accent3)">https://api.golemio.cz/v2/pid/departureboards</span></div>
-          <div style="color:var(--text3);padding-left:16px">?aswIds=U539Z1P&amp;limit=10&amp;minutesAfter=120&amp;skip=atStop</div>
-          <br>
-          <div><span style="color:var(--green)">GET</span> <span style="color:var(--accent3)">https://api.golemio.cz/v2/gtfs/stops</span></div>
-          <div style="color:var(--text3);padding-left:16px">?names[]=Národní+třída&amp;limit=10</div>
-          <br>
-          <div><span style="color:var(--green)">GET</span> <span style="color:var(--accent3)">https://api.golemio.cz/v2/vehiclepositions</span></div>
-          <div style="color:var(--text3);padding-left:16px">?limit=50</div>
-        </div>
-      </div>
-
-      <div class="as">
-        <div class="as-title">Funkce aplikace</div>
-        <div class="fl">
-          <div class="fi"><div class="fi-icon">🚏</div><div class="fi-text"><h4>Živé odjezdy</h4><p>Reálná data z Golemio API, auto-obnovení</p></div></div>
-          <div class="fi"><div class="fi-icon">🔍</div><div class="fi-text"><h4>Vyhledávání zastávek</h4><p>Fulltextové hledání přes GTFS databázi</p></div></div>
-          <div class="fi"><div class="fi-icon">⚡</div><div class="fi-text"><h4>Rychlý výběr</h4><p>Přímá tlačítka pro hlavní pražské uzly</p></div></div>
-          <div class="fi"><div class="fi-icon">⭐</div><div class="fi-text"><h4>Oblíbené zastávky</h4><p>Uložení zastávek v postranním panelu</p></div></div>
-          <div class="fi"><div class="fi-icon">🚌</div><div class="fi-text"><h4>Přehled vozidel</h4><p>Aktuální polohy, zpoždění, rychlost</p></div></div>
-          <div class="fi"><div class="fi-icon">🎨</div><div class="fi-text"><h4>5 barevných témat</h4><p>Noční, Denní, Tramvaj, Metro, Terminál</p></div></div>
-        </div>
-      </div>
-
-      <div class="as">
-        <div class="as-title">Changelog</div>
-        <div class="cl-item">
-          <div><div class="cl-v">v2.1</div><div class="cl-d">Feb 2026</div></div>
-          <div class="cl-e">
-            <h4><span class="tag tag-fix">OPRAVA</span>Správné API endpointy</h4>
-            <ul>
-              <li>Opraveny URL: /v2/pid/departureboards, /v2/gtfs/stops, /v2/vehiclepositions</li>
-              <li>Přidána tlačítka rychlého výběru (Národní třída, Hlavní nádraží, atd.)</li>
-              <li>Vylepšené chybové zprávy s plnou URL pro ladění</li>
-              <li>Zobrazení skutečných API endpointů v sekci O aplikaci</li>
-            </ul>
-          </div>
-        </div>
-        <div class="cl-item">
-          <div><div class="cl-v">v2.0</div><div class="cl-d">Feb 2026</div></div>
-          <div class="cl-e">
-            <h4><span class="tag tag-new">NOVÉ</span>Kompletní přepracování UI</h4>
-            <ul>
-              <li>5 barevných témat, stránka Vozidla, pokročilá nastavení</li>
-              <li>Auto-obnovení s progress barem a odpočtem</li>
-              <li>Oblíbené zastávky, filtry dle typu dopravy</li>
-            </ul>
-          </div>
-        </div>
-        <div class="cl-item">
-          <div><div class="cl-v">v1.0</div><div class="cl-d">Sep 2025</div></div>
-          <div class="cl-e">
-            <h4><span class="tag tag-new">NOVÉ</span>První vydání</h4>
-            <ul>
-              <li>Základní odjezdová tabule přes Golemio API</li>
-              <li>Podpora MHD, tramvají, metra a vlaků PID</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="as">
-        <div class="as-title">Právní informace</div>
-        <div style="font-size:12px;color:var(--text3);line-height:1.7;font-family:var(--font-mono)">
-          Data © Operátor ICT, a.s. — Golemio API (CC BY 4.0)<br>
-          Tato aplikace není oficiálním produktem PID ani ROPID.<br>
-          API klíč je uložen výhradně lokálně ve vašem prohlížeči.
-        </div>
-      </div>
-    </div>
-  </div>
-
-</main>
 </div>
 
+<!-- ─── VOZIDLA ─── -->
+<div class="page" id="page-vehicles">
+  <div class="pg-title">🚌 Vozidla v provozu</div>
+  <div class="pg-sub">Živé polohy vozidel PID — vyžaduje API klíč</div>
+  <div class="sbar">
+    <input class="sinput" id="vq" type="text" placeholder="Filtrovat dle linky (např. 22, A, 207)…" oninput="filterVeh()">
+    <button class="sbtn" onclick="loadVeh()">⟳ Načíst</button>
+  </div>
+  <div class="errbox" id="eveh"></div>
+  <div id="vboard">
+    <div class="sbox"><div class="sbox-icon">🗺️</div><div class="sbox-title">Klikněte na Načíst</div><div class="sbox-desc">Zobrazí aktuální polohy a zpoždění vozidel.</div></div>
+  </div>
+</div>
+
+<!-- ─── NASTAVENÍ ─── -->
+<div class="page" id="page-settings">
+  <div class="pg-title">⚙️ Nastavení</div>
+  <div class="pg-sub">Přizpůsobte si aplikaci</div>
+  <div class="card">
+    <div class="card-title">Odjezdy</div>
+    <div class="set-row"><div class="sl"><h4>Automatické obnovení</h4><p>Interval v sekundách</p></div>
+      <select class="ss" id="cfgR" onchange="sc('refresh',this.value)">
+        <option value="20">20s</option><option value="30" selected>30s</option>
+        <option value="45">45s</option><option value="60">60s</option><option value="0">Vypnout</option>
+      </select></div>
+    <div class="set-row"><div class="sl"><h4>Počet odjezdů</h4><p>Max. počet najednou</p></div>
+      <select class="ss" id="cfgL" onchange="sc('lim',this.value)">
+        <option value="5">5</option><option value="10" selected>10</option>
+        <option value="15">15</option><option value="20">20</option>
+      </select></div>
+    <div class="set-row"><div class="sl"><h4>Přeskočit "u zastávky"</h4><p>Nezobrazit odj. ze zastávky</p></div>
+      <div class="tog on" id="tSkip" onclick="st('skip',this)"></div></div>
+    <div class="set-row"><div class="sl"><h4>Klimatizace ❄️</h4><p>Ikona u vybavených vozidel</p></div>
+      <div class="tog on" id="tAC" onclick="st('ac',this)"></div></div>
+    <div class="set-row"><div class="sl"><h4>Zobrazení času</h4><p>Minuty nebo čas odjezdu</p></div>
+      <select class="ss" id="cfgT" onchange="sc('tm',this.value)">
+        <option value="minutes" selected>Minuty</option><option value="time">Čas odjezdu</option><option value="both">Obojí</option>
+      </select></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Téma</div>
+    <div class="set-row">
+      <div class="sl"><h4>Barevné schéma</h4></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button onclick="setTheme('dark')" class="sbtn" style="padding:5px 9px;font-size:10px">🌙 Noční</button>
+        <button onclick="setTheme('light')" class="sbtn" style="padding:5px 9px;font-size:10px;background:var(--bg3);color:var(--text)">☀️ Denní</button>
+        <button onclick="setTheme('tram')" class="sbtn" style="padding:5px 9px;font-size:10px;background:rgba(68,217,134,.18);color:var(--green)">🚃 Tramvaj</button>
+        <button onclick="setTheme('metro')" class="sbtn" style="padding:5px 9px;font-size:10px;background:rgba(78,168,255,.18);color:var(--accent3)">🚇 Metro</button>
+        <button onclick="setTheme('terminal')" class="sbtn" style="padding:5px 9px;font-size:10px;background:#000;color:#00ff41">💻 Terminál</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Data</div>
+    <div class="set-row"><div class="sl"><h4>Smazat oblíbené</h4><p>Odstraní všechny uložené zastávky</p></div>
+      <button onclick="clearSaved()" style="padding:4px 9px;font:700 10px/1 var(--M);background:rgba(255,79,79,.14);color:var(--red);border:1px solid rgba(255,79,79,.28);border-radius:5px;cursor:pointer">Smazat</button></div>
+    <div class="set-row"><div class="sl"><h4>Smazat API klíč</h4><p>Odstraní z paměti prohlížeče</p></div>
+      <button onclick="clearKey()" style="padding:4px 9px;font:700 10px/1 var(--M);background:rgba(255,79,79,.14);color:var(--red);border:1px solid rgba(255,79,79,.28);border-radius:5px;cursor:pointer">Smazat</button></div>
+  </div>
+</div>
+
+<!-- ─── O APLIKACI ─── -->
+<div class="page" id="page-about" style="max-width:680px">
+  <div class="about-hero">
+    <div class="ah-title">PID <span>Odjezdová</span><br>Tabule</div>
+    <div class="ah-desc">Webová aplikace pro živé odjezdy Pražské integrované dopravy pomocí <strong>Golemio API v2</strong> a systému <strong>CIS</strong> (Celostátní informační systém o jízdních řádech).</div>
+    <div class="ah-links">
+      <a class="alink" href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank">🔑 Získat API klíč</a>
+      <a class="alink" href="https://api.golemio.cz/v2/pid/docs/openapi/" target="_blank">📖 API Dokumentace</a>
+      <a class="alink" href="https://pid.cz/o-systemu/opendata/" target="_blank">📊 Opendata PID</a>
+    </div>
+    <div class="author-badge">
+      <div class="author-av">JR</div>
+      <div>
+        <div class="author-name">Jakub Růžička</div>
+        <div class="author-gh">GitHub: <a href="https://github.com/thejakubruzicka" target="_blank">@thejakubruzicka</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Jak začít</div>
+    <div style="font:400 12px/1.9 var(--S);color:var(--text2)">
+      <strong style="color:var(--text)">1.</strong> Zaregistrujte se na <a href="https://api.golemio.cz/api-keys/auth/sign-up" target="_blank" style="color:var(--accent3);text-decoration:none">api.golemio.cz</a> a získejte bezplatný API klíč.<br>
+      <strong style="color:var(--text)">2.</strong> Vložte klíč do pole v levém panelu a klikněte <em>Uložit klíč</em>.<br>
+      <strong style="color:var(--text)">3.</strong> Přejděte na <em>Odjezdy</em> a hledejte zastávku (min. 2 znaky).<br>
+      <strong style="color:var(--text)">4.</strong> Uložte oblíbené zastávky kliknutím na ⭐ u tabule.<br>
+      <strong style="color:var(--text)">5.</strong> Přizpůsobte aplikaci v sekci <em>Nastavení</em>.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Funkce</div>
+    <div class="feat-grid">
+      <div class="feat"><div class="feat-ico">🚏</div><div class="feat-t"><h4>Živé odjezdy</h4><p>Data z Golemio API s auto-obnovením</p></div></div>
+      <div class="feat"><div class="feat-ico">🔍</div><div class="feat-t"><h4>Hledání zastávek</h4><p>Fulltextové hledání přes GTFS data</p></div></div>
+      <div class="feat"><div class="feat-ico">🚌</div><div class="feat-t"><h4>Přehled vozidel</h4><p>Polohy a zpoždění v reálném čase</p></div></div>
+      <div class="feat"><div class="feat-ico">⭐</div><div class="feat-t"><h4>Oblíbené zastávky</h4><p>Rychlý přístup z postranního panelu</p></div></div>
+      <div class="feat"><div class="feat-ico">🎨</div><div class="feat-t"><h4>5 barevných témat</h4><p>Noční · Denní · Tramvaj · Metro · Terminál</p></div></div>
+      <div class="feat"><div class="feat-ico">🔄</div><div class="feat-t"><h4>Auto-obnovení</h4><p>Nastavitelný interval 20–60 s</p></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Changelog &amp; Aktualizace</div>
+    <div class="cl-row">
+      <div><div class="cl-v">v2.2</div><div class="cl-d">Feb 2026</div></div>
+      <div class="cl-e"><h4><span class="tag tg-fix">OPRAVA</span>Opraveny všechny API problémy</h4>
+        <ul>
+          <li>Správný endpoint hledání: <code>/v2/gtfsstops?names=</code></li>
+          <li>Správný endpoint odjezdů: <code>/v2/pid/departureboards?ids=</code> (GTFS IDs, bez lomítka za URL)</li>
+          <li>Správný parametr <code>total=</code> místo <code>limit=</code> u odjezdů</li>
+          <li>Opraven endpoint vozidel: <code>/v2/pid/vehiclepositions</code></li>
+          <li>Přidán autor projektu: Jakub Růžička</li>
+        </ul>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div><div class="cl-v">v2.0</div><div class="cl-d">Feb 2026</div></div>
+      <div class="cl-e"><h4><span class="tag tg-new">NOVÉ</span>Kompletní přepracování UI</h4>
+        <ul>
+          <li>5 barevných témat, stránka Vozidla, Nastavení, O aplikaci</li>
+          <li>Progress bar auto-obnovení, filtrace dle typu dopravy</li>
+          <li>Zobrazení zpoždění, rychlosti a klimatizace</li>
+        </ul>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div><div class="cl-v">v1.0</div><div class="cl-d">Sep 2025</div></div>
+      <div class="cl-e"><h4><span class="tag tg-new">NOVÉ</span>První vydání</h4>
+        <ul><li>Základní odjezdová tabule s podporou MHD, tramvají, metra a vlaků</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Technické info</div>
+    <div style="font:400 9px/1.9 var(--M);color:var(--text3)">
+      Search:&nbsp;&nbsp;&nbsp;&nbsp; GET /v2/gtfsstops?names=&lt;q&gt;&amp;limit=10<br>
+      Odjezdy:&nbsp;&nbsp; GET /v2/pid/departureboards?ids=&lt;gtfsId&gt;&amp;total=N&amp;minutesAfter=120<br>
+      Vozidla:&nbsp;&nbsp; GET /v2/pid/vehiclepositions?limit=50<br>
+      Auth:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; X-Access-Token header · Data © Operátor ICT, a.s.
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- .layout -->
+
 <script>
-// =====================
-// CORRECT GOLEMIO v2 ENDPOINTS
-// =====================
-const EP_DEPARTURES = 'https://api.golemio.cz/v2/pid/departureboards';
-const EP_STOPS      = 'https://api.golemio.cz/v2/gtfs/stops';
-const EP_VEHICLES   = 'https://api.golemio.cz/v2/vehiclepositions';
+// ════════════════════════════════════════
+//  CONFIG & STATE
+// ════════════════════════════════════════
+const API = 'https://api.golemio.cz/v2';
 
-// =====================
-// STATE
-// =====================
-let apiKey = localStorage.getItem('pid_api_key') || '';
-let curId = null, curName = '';
-let rfTimer = null, rfCountdown = 30;
-let rfInterval = parseInt(localStorage.getItem('pid_rf') || '30');
-let allVehicles = [];
-let savedStops = JSON.parse(localStorage.getItem('pid_stops') || '[]');
-let cfg = JSON.parse(localStorage.getItem('pid_cfg') || '{}');
+let key   = localStorage.getItem('pid.key') || '';
+let cfg   = JSON.parse(localStorage.getItem('pid.cfg') || '{}');
+let saved = JSON.parse(localStorage.getItem('pid.saved') || '[]');
+let curId = '', curName = '';
+let timer = null, cd = 30;
+let allVeh = [];
 
-// =====================
-// INIT
-// =====================
-addEventListener('load', () => {
+// ════════════════════════════════════════
+//  BOOT
+// ════════════════════════════════════════
+window.addEventListener('load', () => {
   setInterval(() => document.getElementById('clock').textContent = new Date().toLocaleTimeString('cs-CZ'), 1000);
-  document.getElementById('clock').textContent = new Date().toLocaleTimeString('cs-CZ');
-  loadSettings();
+  if (key) { document.getElementById('apiKey').value = key; setKeySt('ok','✓ Klíč načten'); }
+  applyCfg();
   renderSaved();
-  if (apiKey) { document.getElementById('apiKeyInput').value = apiKey; setApiStatus('ok','✓ Klíč načten'); }
-  const t = localStorage.getItem('pid_theme'); if (t) setTheme(t);
+  const t = localStorage.getItem('pid.theme');
+  if (t) setTheme(t);
 });
 
-// =====================
-// THEME
-// =====================
+// ════════════════════════════════════════
+//  THEME
+// ════════════════════════════════════════
 function setTheme(t) {
   document.body.dataset.theme = t;
-  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === t));
-  localStorage.setItem('pid_theme', t);
+  document.querySelectorAll('.tb').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  localStorage.setItem('pid.theme', t);
 }
 
-// =====================
-// NAV
-// =====================
-function showPage(p) {
+// ════════════════════════════════════════
+//  NAV
+// ════════════════════════════════════════
+function nav(p, btn) {
   document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
   document.getElementById('page-' + p).classList.add('active');
-  const map = { departures: 'odjezdy', vehicles: 'vozidla', settings: 'nastaven', about: 'o aplikaci' };
-  document.querySelectorAll('.nav-btn').forEach(b => { if (b.textContent.toLowerCase().includes(map[p])) b.classList.add('active'); });
+  if (btn) btn.classList.add('active');
 }
 
-// =====================
-// API KEY
-// =====================
-function saveApiKey() {
-  const v = document.getElementById('apiKeyInput').value.trim();
-  if (!v) { setApiStatus('err','✗ Prázdný klíč'); return; }
-  apiKey = v; localStorage.setItem('pid_api_key', v); setApiStatus('ok','✓ Klíč uložen');
+// ════════════════════════════════════════
+//  API KEY
+// ════════════════════════════════════════
+function saveKey() {
+  const v = document.getElementById('apiKey').value.trim();
+  if (!v) { setKeySt('err','✗ Prázdný klíč'); return; }
+  key = v; localStorage.setItem('pid.key', key); setKeySt('ok','✓ Uložen');
 }
-function clearApiKey() {
-  apiKey = ''; localStorage.removeItem('pid_api_key');
-  document.getElementById('apiKeyInput').value = ''; setApiStatus('ok','✓ Klíč smazán');
+function clearKey() {
+  key = ''; localStorage.removeItem('pid.key');
+  document.getElementById('apiKey').value = ''; setKeySt('ok','✓ Smazán');
 }
-function setApiStatus(cls, msg) {
-  const el = document.getElementById('apiStatus'); el.textContent = msg; el.className = 'api-status ' + cls;
+function setKeySt(cls, msg) {
+  const el = document.getElementById('keySt');
+  el.textContent = msg; el.className = 'api-st ' + cls;
 }
 
-// =====================
-// STOP SEARCH — /v2/gtfs/stops?names[]=...
-// =====================
-let dbt = null;
-function onStopInput() { clearTimeout(dbt); dbt = setTimeout(searchStops, 450); }
+// ════════════════════════════════════════
+//  STOP SEARCH
+//  Endpoint: GET /v2/gtfsstops?names=<q>&limit=10
+//  Returns features[].properties.stop_id  → e.g. "U100Z1P"
+// ════════════════════════════════════════
+let _dt = null;
+function debSearch() { clearTimeout(_dt); _dt = setTimeout(doSearch, 420); }
 
-async function searchStops() {
-  const q = document.getElementById('stopSearch').value.trim();
-  const el = document.getElementById('searchResults');
-  if (q.length < 2) { el.style.display = 'none'; return; }
-  if (!apiKey) { showErr('Zadejte Golemio API klíč v postranním panelu.', 'errorBanner'); return; }
-  hideErr('errorBanner');
+async function doSearch() {
+  const q = document.getElementById('q').value.trim();
+  const sr = document.getElementById('sr');
+  if (q.length < 2) { sr.style.display = 'none'; return; }
+  if (!key) { showErr('edep','Zadejte API klíč v postranním panelu.'); return; }
+  hideErr('edep');
   try {
-    const url = `${EP_STOPS}?names[]=${encodeURIComponent(q)}&limit=10`;
-    const r = await goFetch(url);
-    const d = await r.json();
-    renderStopResults(d.features || d.stops || []);
-  } catch(e) { showErr('Chyba vyhledávání: ' + e.message, 'errorBanner'); }
-}
-
-function renderStopResults(stops) {
-  const el = document.getElementById('searchResults');
-  if (!stops.length) {
-    el.innerHTML = '<div class="search-result-item"><span class="result-name" style="color:var(--text3)">Žádné výsledky — zkuste jiný název zastávky.</span></div>';
-    el.style.display = 'block'; return;
-  }
-  el.innerHTML = stops.slice(0,8).map(s => {
-    const p = s.properties || s;
-    const name = p.stop_name || p.name || 'Neznámá';
-    const id   = p.stop_id  || p.id  || '';
-    const zone = p.zone_id  || '';
-    const rt   = (p.route_type_name || '').toLowerCase();
-    const icon = rt.includes('metro') ? '🚇' : rt.includes('tram') ? '🚃' : rt.includes('ferry') ? '⛴' : '🚌';
-    return `<div class="search-result-item" onclick="loadDepartures('${id}','${esc(name)}')">
-      <div><div class="result-name">${icon} ${name}</div>
-      <div class="result-meta">ID: ${id}${zone?' · Zóna '+zone:''}</div></div>
-      <div style="font-size:12px;color:var(--text3)">›</div>
-    </div>`;
-  }).join('');
-  el.style.display = 'block';
-}
-
-// =====================
-// DEPARTURES — /v2/pid/departureboards?aswIds=<id>&...
-// =====================
-async function loadDepartures(stopId, stopName) {
-  curId = stopId; curName = stopName;
-  document.getElementById('searchResults').style.display = 'none';
-  document.getElementById('stopSearch').value = stopName;
-  hideErr('errorBanner');
-  clearRf();
-  if (!apiKey) {
-    showErr('Zadejte Golemio API klíč v postranním panelu, poté zkuste znovu.\nKlíč zdarma na: api.golemio.cz/api-keys/auth/sign-up', 'errorBanner');
-    return;
-  }
-  showLoading(stopName);
-  const limit = getSetting('departureLimit', 10);
-  const skip  = getSetting('skipAtStop', true) ? '&skip=atStop' : '';
-  const ac    = getSetting('showAC', true) ? 'true' : 'false';
-  const url   = `${EP_DEPARTURES}?aswIds=${encodeURIComponent(stopId)}&limit=${limit}&minutesAfter=120&airCondition=${ac}${skip}`;
-  try {
-    const r = await goFetch(url);
-    if (!r.ok) {
-      const eb = await r.json().catch(() => ({}));
-      throw new Error(`HTTP ${r.status} — ${eb.message || eb.error || 'Neznámá chyba'}`);
+    // NOTE: no trailing slash, names= not name=
+    const data = await pFetch(`${API}/gtfsstops?names=${encodeURIComponent(q)}&limit=12`);
+    const stops = (data.features || []);
+    if (!stops.length) {
+      sr.innerHTML = `<div class="sri"><span class="sri-name" style="color:var(--text3)">Žádné výsledky pro „${e(q)}"</span></div>`;
+    } else {
+      // Deduplicate by stop_name to group platforms — user picks a name,
+      // then we pass the stop_id (GTFS format like U100Z1P) to the departure board
+      sr.innerHTML = stops.slice(0,10).map(s => {
+        const p  = s.properties || {};
+        const nm = p.stop_name  || '?';
+        const id = p.stop_id    || '';           // e.g. "U100Z1P"
+        const zn = p.zone_id    ? `· Zóna ${p.zone_id}` : '';
+        const rt = (p.route_type_name || '').toLowerCase();
+        const ic = rt.includes('metro') ? '🚇' : rt.includes('tram') ? '🚃' : rt.includes('ferry') ? '⛴' : '🚌';
+        return `<div class="sri" onclick="loadDep('${esc(id)}','${esc(nm)}')">
+          <div>
+            <div class="sri-name">${ic} ${nm}</div>
+            <div class="sri-meta">${id} ${zn}</div>
+          </div>
+          <span style="color:var(--text3);font-size:12px">›</span>
+        </div>`;
+      }).join('');
     }
-    const d = await r.json();
-    renderBoard(d, stopName, stopId);
-    startRf(stopId, stopName);
-    renderSaved();
-  } catch(e) {
-    clearBoard();
-    showErr(`Chyba při načítání odjezdů.\n${e.message}\n\nEndpoint: ${url}`, 'errorBanner');
+    sr.style.display = 'block';
+  } catch(err) {
+    showErr('edep','Chyba hledání: ' + err.message);
   }
 }
 
-function renderBoard(data, stopName, stopId) {
-  const deps    = data.departures || [];
-  const isSaved = savedStops.some(s => s.id === stopId);
-  const tm      = getSetting('timeDisplay', 'minutes');
+// ════════════════════════════════════════
+//  DEPARTURE BOARD
+//  Endpoint: GET /v2/pid/departureboards?ids=<stopId>&total=N&minutesAfter=120
+//  ⚠️  Parameter is "ids" (GTFS stop_id) and "total" (not "limit")
+//  ⚠️  No trailing slash after "departureboards"
+// ════════════════════════════════════════
+async function loadDep(stopId, stopName) {
+  curId = stopId; curName = stopName;
+  document.getElementById('sr').style.display = 'none';
+  document.getElementById('q').value = stopName;
+  hideErr('edep');
+  stopTimer();
+  setBoard(`<div class="sbox"><div class="spinner"></div><div class="sbox-title">Načítám odjezdy…</div></div>`);
 
-  document.getElementById('boardContainer').innerHTML = `
-    <div class="board-header">
+  const total  = parseInt(gcfg('lim', 10));
+  const skip   = gcfg('skip', true)  ? '&skip=atStop' : '';
+  const ac     = gcfg('ac', true)    ? '&airCondition=true' : '';
+
+  try {
+    // Correct URL: no slash, ids= (GTFS stop_id), total= (not limit=)
+    const url  = `${API}/pid/departureboards?ids=${encodeURIComponent(stopId)}&total=${total}&minutesAfter=120${skip}${ac}`;
+    const data = await pFetch(url);
+    renderBoard(data, stopId, stopName);
+    startTimer(stopId, stopName);
+  } catch(err) {
+    showErr('edep', 'Chyba načítání: ' + err.message);
+    setBoard(`<div class="sbox"><div class="sbox-icon">⚠️</div><div class="sbox-title">Chyba</div><div class="sbox-desc">${e(err.message)}</div></div>`);
+  }
+}
+
+function renderBoard(data, stopId, stopName) {
+  const deps    = data.departures || [];
+  const isSaved = saved.some(s => s.id === stopId);
+  const tm      = gcfg('tm','minutes');
+
+  setBoard(`
+    <div class="board-hdr">
       <div>
-        <div class="board-title">📍 ${stopName}</div>
+        <div class="board-title">📍 ${e(stopName)}</div>
         <div class="board-sub">ID: ${stopId} · ${deps.length} odjezdů · ${new Date().toLocaleTimeString('cs-CZ')}</div>
       </div>
-      <div class="board-actions">
-        <button class="icon-btn" id="savBtn" title="${isSaved?'Odebrat':'Uložit'}" onclick="toggleSave('${stopId}','${esc(stopName)}')">${isSaved?'⭐':'☆'}</button>
-        <button class="icon-btn" title="Obnovit" onclick="loadDepartures('${stopId}','${esc(stopName)}')">⟳</button>
+      <div class="board-acts">
+        <button class="ic-btn" id="starBtn" onclick="toggleSaved('${esc(stopId)}','${esc(stopName)}')"
+                title="${isSaved?'Odebrat z oblíbených':'Přidat do oblíbených'}">${isSaved?'⭐':'☆'}</button>
+        <button class="ic-btn" onclick="loadDep('${esc(stopId)}','${esc(stopName)}')" title="Obnovit">⟳</button>
       </div>
     </div>
+
     <div class="rbar">
-      <span class="rbar-label">⟳ Za <span id="rcd">${rfInterval}</span>s</span>
-      <div class="rbar-progress"><div class="rbar-fill" id="rfill" style="width:100%"></div></div>
-      <span class="rbar-label" style="color:var(--text3)">${new Date().toLocaleTimeString('cs-CZ')}</span>
+      <span class="rl">⟳ Za <span id="rcd">${gcfg('refresh',30)}</span>s</span>
+      <div class="rprog"><div class="rfill" id="rfill" style="width:100%"></div></div>
+      <span class="rl" style="color:var(--text3)">${new Date().toLocaleTimeString('cs-CZ')}</span>
     </div>
-    <div class="filter-tabs">
-      <button class="filter-tab active" onclick="filterDeps('all',this)">🔢 Vše (${deps.length})</button>
+
+    <div class="ftabs">
+      <button class="ftab on" onclick="fDep('all',this)">🔢 Vše (${deps.length})</button>
       ${buildTabs(deps)}
     </div>
+
     ${deps.length === 0
-      ? '<div class="state-box"><div class="state-icon">😴</div><div class="state-title">Žádné odjezdy</div><div class="state-desc">V blízké době nejsou plánovány žádné odjezdy.</div></div>'
-      : `<table class="departures-table">
-           <thead><tr>
-             <th>Linka</th><th>Směr</th><th>Čas</th>
-             ${tm!=='time'?'<th>Za</th>':''}
-             <th>Zpoždění</th><th>Nást.</th>
-           </tr></thead>
-           <tbody>${deps.map((d,i)=>depRow(d,i,tm)).join('')}</tbody>
-         </table>`}`;
+      ? `<div class="sbox"><div class="sbox-icon">😴</div><div class="sbox-title">Žádné odjezdy</div><div class="sbox-desc">V blízké době nejsou plánovány žádné odjezdy.</div></div>`
+      : `<table class="dtable">
+          <thead><tr>
+            <th>Linka</th><th>Směr</th><th>Čas</th>
+            ${tm !== 'time' ? '<th>Za</th>' : ''}
+            <th>Zpoždění</th><th>Stání</th>
+          </tr></thead>
+          <tbody>${deps.map((d,i) => depRow(d,i,tm)).join('')}</tbody>
+        </table>`
+    }`);
 }
 
-function buildTabs(deps) {
-  const t = {};
-  deps.forEach(d => { const k = rtype(d.route?.type, d.route?.short_name); t[k] = (t[k]||0)+1; });
-  return Object.entries(t).map(([k,c]) => `<button class="filter-tab" onclick="filterDeps('${k}',this)">${ricon(k)} ${k} (${c})</button>`).join('');
-}
+function depRow(d, i, tm) {
+  const route = d.route || {};
+  const trip  = d.trip  || {};
+  // Timestamps: prefer predicted (real-time) over scheduled
+  const ts       = d.departure_timestamp || d.arrival_timestamp || {};
+  const displayTs = ts.predicted || ts.scheduled;
+  const short    = route.short_name || '?';
+  const head     = trip.headsign || '—';
+  const rtype    = rType(route.type, short);
+  const rcls     = rClass(rtype, short);
+  const timeStr  = displayTs ? new Date(displayTs).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}) : '--:--';
 
-function depRow(dep, i, tm) {
-  const route   = dep.route || {};
-  const trip    = dep.trip  || {};
-  const ts      = dep.departure_timestamp || dep.arrival_timestamp || {};
-  const sn      = route.short_name || '?';
-  const type    = rtype(route.type, sn);
-  const cls     = rcls(type, sn);
-  const display = ts.predicted || ts.scheduled;
-  const tstr    = display ? new Date(display).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}) : '--:--';
-  let mh = '';
-  if (display) {
-    const diff = Math.round((new Date(display) - Date.now()) / 60000);
-    if      (diff <= 0) mh = `<span class="dtm now">NYNÍ</span>`;
-    else if (diff <= 2) mh = `<span class="dtm soon">${diff}'</span>`;
-    else if (diff <= 5) mh = `<span class="dtm near">${diff}'</span>`;
-    else                mh = `<span class="dtm ok">${diff}'</span>`;
+  let minsHtml = '';
+  if (displayTs) {
+    const diff = Math.round((new Date(displayTs) - Date.now()) / 60000);
+    minsHtml = diff <= 0  ? `<span class="mins now">NYNÍ</span>`
+             : diff <= 2  ? `<span class="mins soon">${diff}'</span>`
+             : diff <= 5  ? `<span class="mins near">${diff}'</span>`
+             :               `<span class="mins ok">${diff}'</span>`;
   }
-  const dr = ts.delay ?? dep.delay;
-  let dh = `<span class="dep-delay ot" style="opacity:.3">—</span>`;
-  if (dr != null) {
-    const dm = Math.round(dr/60);
-    if (dm > 1) dh = `<span class="dep-delay late">+${dm} min</span>`;
-    else if (dm < -1) dh = `<span class="dep-delay early">${dm} min</span>`;
-    else dh = `<span class="dep-delay ot">±0</span>`;
+
+  // delay in seconds (can be negative = early)
+  const delaySec = d.delay ?? ts.delay ?? null;
+  let dlHtml = `<span class="dl" style="opacity:.3">—</span>`;
+  if (delaySec !== null) {
+    const dm = Math.round(delaySec / 60);
+    dlHtml = dm >  1 ? `<span class="dl late">+${dm}min</span>`
+           : dm < -1 ? `<span class="dl early">${dm}min</span>`
+           :            `<span class="dl ok">±0</span>`;
   }
-  const plat = dep.stop?.platform_code || '';
-  const ac   = dep.vehicle_registration?.air_conditioned;
-  const aci  = getSetting('showAC',true) && ac ? ' ❄️' : '';
-  return `<tr class="dep-row" data-type="${type.toLowerCase()}" style="animation-delay:${i*40}ms">
-    <td><span class="route-badge ${cls}">${sn}</span></td>
-    <td class="dep-headsign">${trip.headsign||dep.headsign||'—'}${aci}</td>
-    <td><span class="dep-time">${tstr}</span></td>
-    ${tm!=='time'?`<td>${mh}</td>`:''}
-    <td>${dh}</td>
-    <td class="dep-platform">${plat}</td>
+
+  const platform = d.stop?.platform_code || '';
+  const acMark   = gcfg('ac',true) && d.vehicle_registration?.air_conditioned ? ' ❄️' : '';
+  const style    = `animation-delay:${i*32}ms`;
+
+  return `<tr class="drow" data-rt="${rtype.toLowerCase()}" style="${style}">
+    <td><span class="rb ${rcls}">${short}</span></td>
+    <td>${e(head)}${acMark}</td>
+    <td><span style="font:700 12px/1 var(--M)">${timeStr}</span></td>
+    ${tm !== 'time' ? `<td>${minsHtml}</td>` : ''}
+    <td>${dlHtml}</td>
+    <td style="font:400 9px/1 var(--M);color:var(--text3)">${platform}</td>
   </tr>`;
 }
 
-function filterDeps(type, btn) {
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.dep-row').forEach(r => {
-    r.style.display = (type==='all' || r.dataset.type===type.toLowerCase()) ? '' : 'none';
+function buildTabs(deps) {
+  const cnt = {};
+  deps.forEach(d => { const t = rType(d.route?.type, d.route?.short_name); cnt[t] = (cnt[t]||0)+1; });
+  return Object.entries(cnt).map(([t,c]) =>
+    `<button class="ftab" onclick="fDep('${t.toLowerCase()}',this)">${rIcon(t)} ${t} (${c})</button>`
+  ).join('');
+}
+
+function fDep(type, btn) {
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.drow').forEach(r => {
+    r.style.display = (type === 'all' || r.dataset.rt === type) ? '' : 'none';
   });
 }
 
-function showLoading(name) {
-  document.getElementById('boardContainer').innerHTML =
-    `<div class="board-header"><div><div class="board-title">📍 ${name}</div><div class="board-sub">Načítám…</div></div></div>
-     <div class="state-box"><div class="spinner"></div><div class="state-title">Kontaktuji Golemio API…</div></div>`;
-}
-function clearBoard() {
-  document.getElementById('boardContainer').innerHTML = '';
-}
+function setBoard(html) { document.getElementById('board').innerHTML = html; }
 
-// =====================
-// ROUTE TYPE HELPERS
-// =====================
-function rtype(n, sn) {
-  if (n===1||n===401)   return 'Metro';
-  if (n===0||n===900)   return 'Tramvaj';
-  if (n===2||n===100)   return 'Vlak';
-  if (n===4)            return 'Přívoz';
-  const s = (sn||'').toString();
-  if (['A','B','C'].includes(s)) return 'Metro';
-  if (/^[PNX]\d/.test(s))       return 'Noční bus';
-  return 'Bus';
-}
-function rcls(type, sn) {
-  if (type==='Metro') {
-    const s=(sn||'').toUpperCase();
-    if(s==='A') return 'rb-ma'; if(s==='B') return 'rb-mb'; if(s==='C') return 'rb-mc';
-    return 'rb-mb';
-  }
-  if(type==='Tramvaj')   return 'rb-tram';
-  if(type==='Vlak')      return 'rb-train';
-  if(type==='Přívoz')    return 'rb-ferry';
-  if(type==='Noční bus') return 'rb-night';
-  return 'rb-bus';
-}
-function ricon(t) {
-  return {Metro:'🚇',Tramvaj:'🚃',Vlak:'🚂',Přívoz:'⛴','Noční bus':'🌙',Bus:'🚌'}[t]||'🚌';
-}
-
-// =====================
-// AUTO REFRESH
-// =====================
-function startRf(id, name) {
-  clearRf();
-  if (rfInterval===0) return;
-  rfCountdown = rfInterval;
-  rfTimer = setInterval(() => {
-    rfCountdown--;
-    const rcd=document.getElementById('rcd'), rfill=document.getElementById('rfill');
-    if(rcd) rcd.textContent=rfCountdown;
-    if(rfill) rfill.style.width=(rfCountdown/rfInterval*100)+'%';
-    if(rfCountdown<=0) loadDepartures(id,name);
+// ════════════════════════════════════════
+//  AUTO-REFRESH
+// ════════════════════════════════════════
+function startTimer(id, name) {
+  stopTimer();
+  const iv = parseInt(gcfg('refresh', 30));
+  if (!iv) return;
+  cd = iv;
+  timer = setInterval(() => {
+    cd--;
+    const rcd  = document.getElementById('rcd');
+    const fill = document.getElementById('rfill');
+    if (rcd)  rcd.textContent = cd;
+    if (fill) fill.style.width = (cd / iv * 100) + '%';
+    if (cd <= 0) loadDep(id, name);
   }, 1000);
 }
-function clearRf() { if(rfTimer){clearInterval(rfTimer);rfTimer=null;} }
-function updateRefreshInterval() {
-  rfInterval=parseInt(document.getElementById('refreshInterval').value);
-  localStorage.setItem('pid_rf',rfInterval);
-  if(curId) startRf(curId,curName);
+function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+// ════════════════════════════════════════
+//  VEHICLES
+//  Endpoint: GET /v2/pid/vehiclepositions?limit=50
+// ════════════════════════════════════════
+async function loadVeh() {
+  if (!key) { showErr('eveh','Zadejte API klíč.'); return; }
+  hideErr('eveh');
+  document.getElementById('vboard').innerHTML =
+    `<div class="sbox"><div class="spinner"></div><div class="sbox-title">Načítám vozidla…</div></div>`;
+  try {
+    const data = await pFetch(`${API}/pid/vehiclepositions?limit=50&includeNotTracking=false`);
+    allVeh = data.features || [];
+    filterVeh();
+  } catch(err) {
+    showErr('eveh','Chyba: ' + err.message);
+    document.getElementById('vboard').innerHTML =
+      `<div class="sbox"><div class="sbox-icon">⚠️</div><div class="sbox-title">Chyba</div><div class="sbox-desc">${e(err.message)}</div></div>`;
+  }
 }
 
-// =====================
-// VEHICLES — /v2/vehiclepositions?limit=50
-// =====================
-async function loadVehicles() {
-  if (!apiKey) { showErr('Zadejte API klíč.','vehicleError'); return; }
-  hideErr('vehicleError');
-  document.getElementById('vehicleContainer').innerHTML =
-    '<div class="state-box"><div class="spinner"></div><div class="state-title">Načítám vozidla…</div></div>';
-  try {
-    const r = await goFetch(`${EP_VEHICLES}?limit=50`);
-    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(`HTTP ${r.status}: ${e.message||''}`); }
-    const d = await r.json();
-    allVehicles = d.features || [];
-    renderVehicles(allVehicles);
-  } catch(e) {
-    showErr(`Chyba vozidel: ${e.message}`,'vehicleError');
-    document.getElementById('vehicleContainer').innerHTML =
-      '<div class="state-box"><div class="state-icon">⚠️</div><div class="state-title">Nepodařilo se načíst</div></div>';
-  }
-}
-function filterVehicles() {
-  const q=document.getElementById('vehicleSearch').value.trim().toUpperCase();
-  renderVehicles(q?allVehicles.filter(v=>(v.properties?.route?.short_name||'').toUpperCase().includes(q)):allVehicles);
-}
-function renderVehicles(veh) {
-  if (!veh.length) {
-    document.getElementById('vehicleContainer').innerHTML =
-      '<div class="state-box"><div class="state-icon">🚌</div><div class="state-title">Žádná vozidla</div></div>';
+function filterVeh() {
+  const q = document.getElementById('vq').value.trim().toUpperCase();
+  const list = q ? allVeh.filter(v => (v.properties?.route?.short_name||'').toUpperCase().includes(q)) : allVeh;
+  if (!list.length) {
+    document.getElementById('vboard').innerHTML =
+      `<div class="sbox"><div class="sbox-icon">🚌</div><div class="sbox-title">Žádná vozidla</div></div>`;
     return;
   }
-  const cards = veh.map((v,i)=>{
-    const p=v.properties||{}, route=p.route||{}, trip=p.trip||{};
-    const sn=route.short_name||'?', type=rtype(route.type,sn), cls=rcls(type,sn);
-    const delay=p.delay!=null?Math.round(p.delay/60):null;
-    const dc=delay==null?'':delay>1?'late':delay<-1?'early':'ot';
-    const dt=delay==null?'—':delay>0?`+${delay} min`:delay<0?`${delay} min`:'±0 min';
-    const spd=p.speed!=null?Math.round(p.speed):null;
-    const brg=p.bearing!=null?p.bearing:null;
-    const ac=p.vehicle_registration?.air_conditioned;
-    return `<div class="vehicle-card" style="animation-delay:${i*30}ms">
-      <div class="vc-header">
-        <div><span class="route-badge ${cls}">${ricon(type)} ${sn}</span>
-        <div class="vc-heading" title="${trip.headsign||'—'}">${trip.headsign||'—'}</div></div>
+  const cards = list.map((v,i) => {
+    const p     = v.properties || {};
+    const short = p.route?.short_name || '?';
+    const rtype = rType(p.route?.type, short);
+    const rcls  = rClass(rtype, short);
+    const head  = p.trip?.headsign || '—';
+    const delay = p.delay != null ? Math.round(p.delay/60) : null;
+    const dcls  = delay == null ? '' : delay > 1 ? 'late' : delay < -1 ? 'early' : 'ok';
+    const dtxt  = delay == null ? '—' : delay > 0 ? `+${delay}min` : delay < 0 ? `${delay}min` : '±0min';
+    const spd   = p.speed   != null ? Math.round(p.speed)+'km/h' : '—';
+    const bear  = p.bearing != null ? p.bearing+'°' : '—';
+    const ac    = p.vehicle_registration?.air_conditioned;
+    return `<div class="vc" style="animation-delay:${i*22}ms">
+      <div class="vc-hd">
+        <div><span class="rb ${rcls}">${rIcon(rtype)} ${short}</span><div class="vc-hs" title="${e(head)}">${e(head)}</div></div>
         <div class="vc-dot"></div>
       </div>
-      <div class="vc-meta">
-        <div class="vc-mi"><div class="vc-ml">Zpoždění</div><div class="vc-mv ${dc}">${dt}</div></div>
-        <div class="vc-mi"><div class="vc-ml">Rychlost</div><div class="vc-mv">${spd!=null?spd+' km/h':'—'}</div></div>
-        <div class="vc-mi"><div class="vc-ml">Směr</div><div class="vc-mv">${brg!=null?brg+'°':'—'}</div></div>
-        <div class="vc-mi"><div class="vc-ml">Klima</div><div class="vc-mv">${ac?'❄️ Ano':ac===false?'✗ Ne':'—'}</div></div>
+      <div class="vm">
+        <div class="vmi"><div class="vml">Zpoždění</div><div class="vmv ${dcls}">${dtxt}</div></div>
+        <div class="vmi"><div class="vml">Rychlost</div><div class="vmv">${spd}</div></div>
+        <div class="vmi"><div class="vml">Směr</div><div class="vmv">${bear}</div></div>
+        <div class="vmi"><div class="vml">Klima</div><div class="vmv">${ac ? '❄️ Ano' : ac === false ? 'Ne' : '—'}</div></div>
       </div>
     </div>`;
   }).join('');
-  document.getElementById('vehicleContainer').innerHTML =
-    `<div style="font-size:12px;font-family:var(--font-mono);color:var(--text3);margin-bottom:12px">${veh.length} vozidel · ${new Date().toLocaleTimeString('cs-CZ')}</div>
-     <div class="vehicle-grid">${cards}</div>`;
+  document.getElementById('vboard').innerHTML =
+    `<div style="font:400 9px/1 var(--M);color:var(--text3);margin-bottom:10px">${list.length} vozidel · ${new Date().toLocaleTimeString('cs-CZ')}</div>
+     <div class="vgrid">${cards}</div>`;
 }
 
-// =====================
-// SAVED STOPS
-// =====================
-function toggleSave(id, name) {
-  const idx = savedStops.findIndex(s=>s.id===id);
-  if (idx>=0) savedStops.splice(idx,1); else savedStops.push({id,name});
-  localStorage.setItem('pid_stops', JSON.stringify(savedStops));
+// ════════════════════════════════════════
+//  SAVED STOPS
+// ════════════════════════════════════════
+function toggleSaved(id, name) {
+  const idx = saved.findIndex(s => s.id === id);
+  if (idx >= 0) saved.splice(idx, 1); else saved.push({id, name});
+  localStorage.setItem('pid.saved', JSON.stringify(saved));
+  const btn = document.getElementById('starBtn');
+  if (btn) btn.textContent = saved.some(s => s.id === id) ? '⭐' : '☆';
   renderSaved();
-  const btn=document.getElementById('savBtn');
-  if(btn) btn.textContent=savedStops.some(s=>s.id===id)?'⭐':'☆';
 }
 function renderSaved() {
-  const el=document.getElementById('savedStopsList');
-  if(!savedStops.length){el.innerHTML='<div class="empty-state">Žádné uložené zastávky</div>';return;}
-  el.innerHTML=savedStops.map(s=>`
-    <div class="saved-stop ${curId===s.id?'active':''}" onclick="loadDepartures('${s.id}','${esc(s.name)}')">
-      <div><div class="saved-stop-name">🚏 ${s.name}</div><div class="saved-stop-id">${s.id}</div></div>
-      <button class="saved-stop-remove" onclick="event.stopPropagation();removeSaved('${s.id}')" title="Odebrat">✕</button>
+  const el = document.getElementById('savedList');
+  if (!el) return;
+  if (!saved.length) { el.innerHTML = '<div class="s-empty">Žádné oblíbené</div>'; return; }
+  el.innerHTML = saved.map(s => `
+    <div class="saved-item${curId===s.id?' cur':''}" onclick="loadDep('${esc(s.id)}','${esc(s.name)}')">
+      <div><div class="si-name">🚏 ${e(s.name)}</div><div class="si-id">${s.id}</div></div>
+      <button class="si-rm" onclick="event.stopPropagation();rmSaved('${esc(s.id)}')">✕</button>
     </div>`).join('');
 }
-function removeSaved(id){savedStops=savedStops.filter(s=>s.id!==id);localStorage.setItem('pid_stops',JSON.stringify(savedStops));renderSaved();}
-function clearSavedStops(){savedStops=[];localStorage.removeItem('pid_stops');renderSaved();}
+function rmSaved(id) { saved=saved.filter(s=>s.id!==id); localStorage.setItem('pid.saved',JSON.stringify(saved)); renderSaved(); }
+function clearSaved() { saved=[]; localStorage.removeItem('pid.saved'); renderSaved(); }
 
-// =====================
-// SETTINGS
-// =====================
-function loadSettings() {
-  const ri=document.getElementById('refreshInterval');
-  const dl=document.getElementById('departureLimit');
-  const td=document.getElementById('timeDisplay');
-  if(ri) ri.value=getSetting('refreshInterval',30);
-  if(dl) dl.value=getSetting('departureLimit',10);
-  if(td) td.value=getSetting('timeDisplay','minutes');
-  const sa=document.getElementById('togSkip');
-  const ac=document.getElementById('togAC');
-  if(sa) sa.className='toggle '+(getSetting('skipAtStop',true)?'on':'');
-  if(ac) ac.className='toggle '+(getSetting('showAC',true)?'on':'');
+// ════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════
+function gcfg(k,def){ return cfg[k]!=null ? cfg[k] : def; }
+function sc(k,v){ cfg[k]=v; localStorage.setItem('pid.cfg',JSON.stringify(cfg)); }
+function st(k,el){ const v=!el.classList.contains('on'); el.className='tog'+(v?' on':''); sc(k,v); }
+function applyCfg(){
+  const r=document.getElementById('cfgR'); if(r) r.value=gcfg('refresh',30);
+  const l=document.getElementById('cfgL'); if(l) l.value=gcfg('lim',10);
+  const t=document.getElementById('cfgT'); if(t) t.value=gcfg('tm','minutes');
+  const sk=document.getElementById('tSkip'); if(sk) sk.className='tog'+(gcfg('skip',true)?' on':'');
+  const ac=document.getElementById('tAC');   if(ac) ac.className='tog'+(gcfg('ac',true)?' on':'');
 }
-function getSetting(k,d){return cfg[k]!=null?cfg[k]:d;}
-function saveSetting(k,v){cfg[k]=v;localStorage.setItem('pid_cfg',JSON.stringify(cfg));}
-function toggleSetting(k,el){const v=!el.classList.contains('on');el.className='toggle '+(v?'on':'');saveSetting(k,v);}
 
-// =====================
-// UTILS
-// =====================
-function goFetch(url) {
-  return fetch(url, {headers:{'X-Access-Token':apiKey,'Content-Type':'application/json'}});
+// ════════════════════════════════════════
+//  ROUTE TYPE HELPERS
+// ════════════════════════════════════════
+function rType(n, short) {
+  if (n===1||n===401) return 'Metro';
+  if (n===0||n===900) return 'Tramvaj';
+  if (n===2||n===100||n===102||n===106) return 'Vlak';
+  if (n===4)          return 'Přívoz';
+  const s = (short||'').toString().toUpperCase();
+  if (['A','B','C'].includes(s)) return 'Metro';
+  if (/^[PN]\d/.test(s))        return 'Noční';
+  return 'Bus';
 }
-function showErr(msg,id){const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display='block';}}
-function hideErr(id){const el=document.getElementById(id);if(el)el.style.display='none';}
-function esc(s){return(s||'').replace(/'/g,"\\'")}
+function rClass(type, short) {
+  if (type==='Metro') {
+    const s=(short||'').toUpperCase();
+    return s==='A'?'rb-ma': s==='B'?'rb-mb': s==='C'?'rb-mc': 'rb-mb';
+  }
+  if (type==='Tramvaj') return 'rb-tram';
+  if (type==='Vlak')    return 'rb-train';
+  if (type==='Přívoz')  return 'rb-ferry';
+  if (type==='Noční')   return 'rb-night';
+  return 'rb-bus';
+}
+function rIcon(t){ return {Metro:'🚇',Tramvaj:'🚃',Vlak:'🚂',Přívoz:'⛴',Noční:'🌙',Bus:'🚌'}[t]||'🚌'; }
+
+// ════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════
+async function pFetch(url) {
+  if (!key) throw new Error('API klíč není nastaven — zadejte ho v postranním panelu');
+  const res = await fetch(url, { headers: { 'X-Access-Token': key } });
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try { const j = await res.json(); msg = j.message || j.error || j.detail || msg; } catch(_) {}
+    if (res.status===401) msg = 'Neplatný nebo vypršelý API klíč (401)';
+    if (res.status===403) msg = 'Přístup odepřen (403) — zkontrolujte klíč';
+    if (res.status===404) msg = 'Endpoint nenalezen (404)';
+    if (res.status===429) msg = 'Příliš mnoho požadavků (429) — zkuste za chvíli';
+    throw new Error(msg);
+  }
+  return res.json();
+}
+function showErr(id, msg){ const el=document.getElementById(id); if(el){el.textContent='⚠️ '+msg; el.style.display='block';}}
+function hideErr(id){ const el=document.getElementById(id); if(el) el.style.display='none'; }
+function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 </script>
 </body>
 </html>
